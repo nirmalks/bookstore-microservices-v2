@@ -3,6 +3,7 @@ package com.nirmalks.checkout_service.order.service.impl;
 import com.nirmalks.checkout_service.cart.entity.Cart;
 import com.nirmalks.checkout_service.cart.entity.CartItem;
 import com.nirmalks.checkout_service.cart.repository.CartRepository;
+import com.nirmalks.checkout_service.common.AsyncTasksService;
 import com.nirmalks.checkout_service.common.BookDto;
 import com.nirmalks.checkout_service.common.UserDto;
 import com.nirmalks.checkout_service.order.api.DirectOrderRequest;
@@ -45,15 +46,17 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository;
     private final WebClient catalogServiceWebClient;
     private final WebClient userServiceWebClient;
+    private final AsyncTasksService asyncTasksService;
     @Autowired
     public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
                             CartRepository cartRepository, @Qualifier("catalogServiceWebClient") WebClient catalogServiceWebClient,
-                            @Qualifier("userServiceWebClient") WebClient userServiceWebClient) {
+                            @Qualifier("userServiceWebClient") WebClient userServiceWebClient, AsyncTasksService asyncTasksService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartRepository = cartRepository;
         this.catalogServiceWebClient = catalogServiceWebClient;
         this.userServiceWebClient = userServiceWebClient;
+        this.asyncTasksService = asyncTasksService;
     }
 
     @Override
@@ -70,6 +73,10 @@ public class OrderServiceImpl implements OrderService {
         order.setTotalCost(order.calculateTotalCost());
         var savedOrder = orderRepository.save(order);
         orderItemRepository.saveAll(orderItems);
+
+        asyncTasksService.sendEmail(savedOrder.getId().toString(), user.getEmail());
+        asyncTasksService.updateAnalytics(savedOrder.getId().toString(), savedOrder.getTotalCost());
+        asyncTasksService.logAudit(savedOrder.getId().toString(), user.getId());
         return OrderMapper.toResponse(user, savedOrder,"Order placed successfully.");
     }
 
