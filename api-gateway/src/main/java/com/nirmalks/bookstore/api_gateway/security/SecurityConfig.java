@@ -11,6 +11,8 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
+import java.time.Duration;
+
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
@@ -95,8 +97,7 @@ public class SecurityConfig {
 					r -> r.path("/api/oauth2/token", "/api/oauth/**")
 						.and()
 						.method("GET", "POST", "PUT", "DELETE")
-						.filters(f -> f.rewritePath("/api/(?<segment>.*)", "/api/${segment}")
-							.circuitBreaker(c -> c.setName("authServerCB").setFallbackUri("forward:/fallback/auth")))
+						.filters(f -> f.rewritePath("/api/(?<segment>.*)", "/api/${segment}"))
 						.uri("lb://auth-server"))
 			.build();
 	}
