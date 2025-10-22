@@ -1,11 +1,11 @@
-package com.nirmalks.checkout_service.common;
+package com.nirmalks.checkout_service.order.service;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AsyncTasksService {
-    @Async
+public class OrderAsyncService {
+    @Async("orderExecutor")
     public void sendEmail(String orderId, String userEmail) {
         System.out.println("Sending email for order " + orderId +
                 " to " + userEmail +
@@ -14,13 +14,13 @@ public class AsyncTasksService {
         System.out.println("Email sent for " + orderId);
     }
 
-    @Async
+    @Async("orderExecutor")
     public void updateAnalytics(String orderId, double totalCost) {
         System.out.println("Updating analytics for " + orderId +
                 " on thread " + Thread.currentThread().getName());
     }
 
-    @Async
+    @Async("orderExecutor")
     public void logAudit(String orderId, Long userId) {
         System.out.println("Writing audit log for " + orderId +
                 " by user " + userId +

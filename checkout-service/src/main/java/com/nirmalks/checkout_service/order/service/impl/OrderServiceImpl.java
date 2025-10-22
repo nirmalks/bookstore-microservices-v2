@@ -3,7 +3,7 @@ package com.nirmalks.checkout_service.order.service.impl;
 import com.nirmalks.checkout_service.cart.entity.Cart;
 import com.nirmalks.checkout_service.cart.entity.CartItem;
 import com.nirmalks.checkout_service.cart.repository.CartRepository;
-import com.nirmalks.checkout_service.common.AsyncTasksService;
+import com.nirmalks.checkout_service.order.service.OrderAsyncService;
 import com.nirmalks.checkout_service.common.BookDto;
 import com.nirmalks.checkout_service.common.UserDto;
 import com.nirmalks.checkout_service.order.api.DirectOrderRequest;
@@ -36,6 +36,10 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -46,11 +50,11 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository;
     private final WebClient catalogServiceWebClient;
     private final WebClient userServiceWebClient;
-    private final AsyncTasksService asyncTasksService;
+    private final OrderAsyncService asyncTasksService;
     @Autowired
     public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
                             CartRepository cartRepository, @Qualifier("catalogServiceWebClient") WebClient catalogServiceWebClient,
-                            @Qualifier("userServiceWebClient") WebClient userServiceWebClient, AsyncTasksService asyncTasksService) {
+                            @Qualifier("userServiceWebClient") WebClient userServiceWebClient, OrderAsyncService asyncTasksService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartRepository = cartRepository;
@@ -65,10 +69,16 @@ public class OrderServiceImpl implements OrderService {
 
         var itemDtos = directOrderRequest.getItems();
         var order = OrderMapper.toOrderEntity(user, directOrderRequest.getAddress());
-        var orderItems = itemDtos.stream().map(itemDto -> {
+
+        ExecutorService executor = Executors.newFixedThreadPool(8);
+        List<CompletableFuture<OrderItem>> orderItemFutures = itemDtos.stream().map(
+                itemDto -> CompletableFuture.supplyAsync(() -> {
             var book = getBookDtoFromCatalogService(itemDto.getBookId()).block();
             return OrderMapper.toOrderItemEntity(book, itemDto, order);
-        }).toList();
+        }, executor))
+                .toList();
+        List<OrderItem> orderItems = orderItemFutures.stream().map(CompletableFuture::join).toList();
+        executor.shutdown();
         order.setItems(orderItems);
         order.setTotalCost(order.calculateTotalCost());
         var savedOrder = orderRepository.save(order);
