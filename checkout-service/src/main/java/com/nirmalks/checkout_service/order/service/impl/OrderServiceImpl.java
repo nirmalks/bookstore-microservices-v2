@@ -3,6 +3,7 @@ package com.nirmalks.checkout_service.order.service.impl;
 import com.nirmalks.checkout_service.cart.entity.Cart;
 import com.nirmalks.checkout_service.cart.entity.CartItem;
 import com.nirmalks.checkout_service.cart.repository.CartRepository;
+import com.nirmalks.checkout_service.order.dto.OrderMessage;
 import com.nirmalks.checkout_service.order.service.OrderAsyncService;
 import com.nirmalks.checkout_service.common.BookDto;
 import com.nirmalks.checkout_service.common.UserDto;
@@ -16,6 +17,7 @@ import com.nirmalks.checkout_service.order.entity.OrderItem;
 import com.nirmalks.checkout_service.order.entity.OrderStatus;
 import com.nirmalks.checkout_service.order.repository.OrderItemRepository;
 import com.nirmalks.checkout_service.order.repository.OrderRepository;
+import com.nirmalks.checkout_service.order.service.OrderEventPublisher;
 import com.nirmalks.checkout_service.order.service.OrderService;
 import common.RequestUtils;
 import dto.PageRequestDto;
@@ -27,6 +29,7 @@ import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -37,7 +40,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -50,17 +52,19 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository;
     private final WebClient catalogServiceWebClient;
     private final WebClient userServiceWebClient;
-    private final OrderAsyncService asyncTasksService;
+    private final OrderEventPublisher orderEventPublisher;
+
     @Autowired
     public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
                             CartRepository cartRepository, @Qualifier("catalogServiceWebClient") WebClient catalogServiceWebClient,
-                            @Qualifier("userServiceWebClient") WebClient userServiceWebClient, OrderAsyncService asyncTasksService) {
+                            @Qualifier("userServiceWebClient") WebClient userServiceWebClient,
+                            OrderEventPublisher orderEventPublisher) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartRepository = cartRepository;
         this.catalogServiceWebClient = catalogServiceWebClient;
         this.userServiceWebClient = userServiceWebClient;
-        this.asyncTasksService = asyncTasksService;
+        this.orderEventPublisher = orderEventPublisher;
     }
 
     @Override
@@ -84,9 +88,20 @@ public class OrderServiceImpl implements OrderService {
         var savedOrder = orderRepository.save(order);
         orderItemRepository.saveAll(orderItems);
 
-        asyncTasksService.sendEmail(savedOrder.getId().toString(), user.getEmail());
-        asyncTasksService.updateAnalytics(savedOrder.getId().toString(), savedOrder.getTotalCost());
-        asyncTasksService.logAudit(savedOrder.getId().toString(), user.getId());
+        List<String> titles = orderItems.stream()
+                .map(item -> item.getBookTitle())
+                .toList();
+
+        OrderMessage message = new OrderMessage(
+                savedOrder.getId().toString(),
+                user.getId(),
+                user.getEmail(),
+                savedOrder.getTotalCost(),
+                savedOrder.getPlacedDate(),
+                titles
+        );
+        orderEventPublisher.publishOrderCreatedEvent(message);
+
         return OrderMapper.toResponse(user, savedOrder,"Order placed successfully.");
     }
 
