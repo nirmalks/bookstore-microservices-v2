@@ -132,6 +132,11 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<image>
+						<builder>paketobuildpacks/builder-jammy-base</builder>
+					</image>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>io.spring.javaformat</groupId>

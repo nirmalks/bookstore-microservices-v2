@@ -47,13 +47,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
   rabbitmq:
     image: rabbitmq:4-management
     container_name: rabbitmq-dev
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "5672:5672" # Main AMQP port for Spring Boot apps
+      - "15672:15672" # Management UI port
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -64,39 +63,38 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
   # --- Microservices ---
   discovery-service:
-    image: discovery-service:0.0.1-SNAPSHOT
+    build:
+      context: .
+      dockerfile: discovery-service/Dockerfile
     ports:
       - "8761:8761"
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8761'"]
+      test: ["CMD-SHELL", "wget -T 5 -qO- http://localhost:8761/actuator/health | grep UP || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 20s
-
+      retries: 5
+      start_period: 15s
   config-server:
     build:
-      context: ./config-server
-    image: config-server:0.0.1-SNAPSHOT
+      context: .
+      dockerfile: config-server/Dockerfile
     ports:
       - "8888:8888"
     depends_on:
       discovery-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8888'"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD-SHELL", "wget -T 5 -qO- http://localhost:8888/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 3s
       retries: 10
-      start_period: 20s
-
+      start_period: 15s
   api-gateway:
     build:
-      context: ./api-gateway
-    image: api_gateway:0.0.1-SNAPSHOT
+      context: .
+      dockerfile: api-gateway/Dockerfile
     ports:
       - "8080:8080"
     depends_on:
@@ -108,17 +106,10 @@ services:
         condition: service_healthy
       user-service:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8080'"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
-
   auth-server:
     build:
-      context: ./auth-server
-    image: auth-server:0.0.1-SNAPSHOT
+      context: .
+      dockerfile: auth-server/Dockerfile
     ports:
       - "9001:9001"
     depends_on:
@@ -133,16 +124,15 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin123
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/9001'"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD-SHELL", "wget -T 5 -qO- http://localhost:9001/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 3s
       retries: 10
-      start_period: 20s
-
+      start_period: 15s
   catalog-service:
     build:
-      context: ./catalog-service
-    image: catalog-service:0.0.1-SNAPSHOT
+      context: .
+      dockerfile: catalog-service/Dockerfile
     ports:
       - "8082:8082"
     depends_on:
@@ -156,17 +146,11 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://catalog-db:5432/bookstore_catalog_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin123
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8082'"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
 
   user-service:
     build:
-      context: ./user-service
-    image: user-service:0.0.1-SNAPSHOT
+      context: .
+      dockerfile: user-service/Dockerfile
     ports:
       - "8081:8081"
     depends_on:
@@ -176,21 +160,21 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -T 5 -qO- http://localhost:8081/actuator/health || exit 1" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://user-db:5432/bookstore_user_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin123
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8081'"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
 
   checkout-service:
     build:
-      context: ./checkout-service
-    image: checkout-service:0.0.1-SNAPSHOT
+      context: .
+      dockerfile: checkout-service/Dockerfile
     ports:
       - "8083:8083"
     depends_on:
@@ -204,12 +188,6 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://checkout-db:5432/bookstore_checkout_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin123
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8083'"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
 
   # --- Monitoring ---
   zipkin:
