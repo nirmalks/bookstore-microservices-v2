@@ -5,26 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a0fba06-e566-4729-86db-4c73a9ef2d55" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/docker-compose-healthcheck.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker-compose-old.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/jpa-buddy.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/uiDesigner.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auth-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auth-server/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/catalog-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/catalog-service/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/checkout-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/config-server/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config-server/src/main/resources/config/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/config-server/src/main/resources/config/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/discovery-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/discovery-service/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/discovery-service/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/discovery-service/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shared-utils/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/shared-utils/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/java/com/nirmalks/bookstore/api_gateway/security/JwtHeaderPropagationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/java/com/nirmalks/bookstore/api_gateway/security/JwtHeaderPropagationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/security/CustomAccessTokenResponseHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/security/CustomAccessTokenResponseHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/security/CustomUserDetailsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/security/CustomUserDetailsService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/security/PasswordAuthenticationProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/security/PasswordAuthenticationProvider.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/security/JwtHeaderAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/security/JwtHeaderAuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/service/OrderAsyncService.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/service/OrderAsyncService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/service/impl/OrderServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/service/impl/OrderServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/security/JwtHeaderAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/security/JwtHeaderAuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/security/InternalApiJwtConverter.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/security/InternalApiJwtConverter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/security/SecurityUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/user/service/impl/UserServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/user/service/impl/UserServiceImpl.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,7 +50,7 @@
     "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/projects/showcase/bookstore-microservices-async",
-    "project.structure.last.edited": "Modules",
+    "project.structure.last.edited": "SDKs",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
     "settings.editor.selected.configurable": "Docker"

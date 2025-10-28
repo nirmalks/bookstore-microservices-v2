@@ -17,8 +17,6 @@ public class JwtHeaderPropagationFilter implements GlobalFilter, Ordered {
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-		System.out.println("JwtHeaderPropagationFilter: Processing path: " + exchange.getRequest().getPath());
-
 		return ReactiveSecurityContextHolder.getContext()
 			.filter(context -> context.getAuthentication() != null && context.getAuthentication().isAuthenticated())
 			.map(context -> context.getAuthentication())
@@ -30,13 +28,11 @@ public class JwtHeaderPropagationFilter implements GlobalFilter, Ordered {
 					String userId = jwt.getSubject();
 					if (userId != null) {
 						builder.header("X-User-ID", userId);
-						System.out.println("Added User ID header: " + userId);
 					}
 
 					String rolesClaim = "roles";
 					if (jwt.hasClaim(rolesClaim)) {
 						String roles = jwt.getClaimAsString(rolesClaim);
-						System.out.println("roles str" + roles);
 						if (roles != null) {
 							String rolesWithoutBrackets = roles.trim().replace("[", "").replace("]", "");
 							builder.header("X-User-Roles", rolesWithoutBrackets);

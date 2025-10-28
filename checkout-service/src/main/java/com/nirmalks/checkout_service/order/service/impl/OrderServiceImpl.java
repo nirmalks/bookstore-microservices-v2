@@ -27,6 +27,8 @@ import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,7 +47,7 @@ import java.util.concurrent.Executors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
-
+    private final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
     private OrderRepository orderRepository;
 
     private OrderItemRepository orderItemRepository;
@@ -188,12 +190,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private UserDto getUserDtoFallback(Long userId, Throwable t) {
-        System.err.println("User Service call failed after retries/bulkhead limit. Error: " + t.getMessage());
+        logger.error("User Service call failed after retries/bulkhead limit. Error: {}", t.getMessage());
         throw new ServiceUnavailableException("Cannot retrieve User details. System is currently unavailable.");
     }
 
     private Mono<BookDto> getBookDtoFallback(Long bookId, Throwable t) {
-        System.err.println("Catalog Service call failed due to rate limit/bulkhead. Error: " + t.getMessage());
+        logger.error("Catalog Service call failed due to rate limit/bulkhead. Error: {}", t.getMessage());
         throw new ServiceUnavailableException("Cannot verify Book details. System is currently unavailable.");
     }
 

@@ -42,7 +42,6 @@ public class CustomAccessTokenResponseHandler implements AuthenticationSuccessHa
                     - accessToken.getIssuedAt().getEpochSecond();
             output.put("expires_in", expiresIn);
         }
-        System.out.println("after epirty");
         // Add custom claims from the provider's additional parameters
         Map<String, Object> additionalParameters = tokenAuth.getAdditionalParameters();
         output.putAll(additionalParameters);
@@ -50,7 +49,6 @@ public class CustomAccessTokenResponseHandler implements AuthenticationSuccessHa
         if (tokenAuth.getRefreshToken() != null) {
             output.put("refresh_token", tokenAuth.getRefreshToken().getTokenValue());
         }
-        System.out.println("before resp set" + output);
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=UTF-8");
         objectMapper.writeValue(response.getOutputStream(), output);

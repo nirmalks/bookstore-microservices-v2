@@ -3,6 +3,8 @@ package com.nirmalks.bookstore.auth_server.security;
 import dto.LoginRequest;
 import dto.UserDto;
 import dto.UserRole;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -29,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class PasswordAuthenticationProvider implements AuthenticationProvider {
-
+    private final Logger logger = LoggerFactory.getLogger(PasswordAuthenticationProvider.class);
     private final WebClient webClient;
     private final OAuth2AuthorizationService authorizationService;
     private final OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator;
@@ -64,7 +66,6 @@ public class PasswordAuthenticationProvider implements AuthenticationProvider {
                     .retrieve()
                     .bodyToMono(UserDto.class)
                     .block();
-            System.out.println("userdto" + userDto);
             if (userDto == null || userDto.getId() == null || userDto.getUsername() == null) {
                 throw new BadCredentialsException("User authentication failed: Incomplete user data.");
             }
@@ -132,10 +133,10 @@ public class PasswordAuthenticationProvider implements AuthenticationProvider {
                     metadata
             );
         } catch (WebClientResponseException e) {
-            System.err.println("WebClient call to user service failed: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            logger.error("WebClient call to user service failed: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new BadCredentialsException("Invalid credentials: User service authentication failed.", e);
         } catch (Exception e) {
-            System.err.println("An unexpected error occurred during password authentication: " + e.getMessage());
+            logger.error("An unexpected error occurred during password authentication: {}", e.getMessage());
             throw new BadCredentialsException("Invalid credentials", e);
         }
     }
