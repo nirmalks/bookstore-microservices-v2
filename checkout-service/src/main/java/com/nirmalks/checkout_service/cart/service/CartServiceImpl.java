@@ -8,7 +8,6 @@ import com.nirmalks.checkout_service.cart.entity.CartItem;
 import com.nirmalks.checkout_service.cart.repository.CartItemRepository;
 import com.nirmalks.checkout_service.cart.repository.CartRepository;
 import com.nirmalks.checkout_service.common.BookDto;
-import com.nirmalks.checkout_service.common.UserDto;
 import exceptions.ResourceNotFoundException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
