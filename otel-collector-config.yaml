@@ -1,0 +1,41 @@
+receivers:
+  # Receives data from our Spring Boot applications using OTLP
+  otlp:
+    protocols:
+      http:
+        endpoint: "0.0.0.0:4318"
+      grpc:
+        endpoint: "0.0.0.0:4317"
+
+exporters:
+  # Jaeger Exporter (for TRACES)
+  otlp/jaeger:
+    endpoint: "jaeger:4317"
+    tls:
+      insecure: true
+
+  # Prometheus Exporter (for METRICS scraping)
+  prometheus:
+    endpoint: "0.0.0.0:9090" # Collector exposes its own metrics for Prometheus to scrape
+
+  # Debug Exporter
+  debug:
+    verbosity: detailed
+
+processors:
+  # Batches spans before exporting, reducing network overhead
+  batch:
+
+service:
+  pipelines:
+    # --- TRACES PIPELINE: Receive OTLP -> Batch -> Export to Jaeger ---
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/jaeger, debug]
+
+    # --- METRICS PIPELINE: Receive OTLP -> Batch -> Export to Prometheus  ---
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus, debug]
