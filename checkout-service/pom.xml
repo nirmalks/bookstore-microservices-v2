@@ -118,7 +118,6 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-otlp</artifactId>
-            <version>1.11.0</version>
         </dependency>
 		<dependency>
 			<groupId>io.micrometer</groupId>
@@ -146,6 +145,7 @@
 			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
+
 	</dependencies>
 
 	<dependencyManagement>
