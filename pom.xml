@@ -20,10 +20,10 @@
         <spring-cloud.version>2025.0.0</spring-cloud.version>
     </properties>
     <modules>
+        <module>shared-utils</module>
         <module>catalog-service</module>
         <module>checkout-service</module>
         <module>user-service</module>
-        <module>shared-utils</module>
         <module>discovery-service</module>
         <module>api-gateway</module>
         <module>auth-server</module>
@@ -50,15 +50,12 @@
                 <version>0.12.6</version>
                 <scope>runtime</scope>
             </dependency>
-            <!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson -->
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt-jackson</artifactId>
                 <version>0.12.6</version>
                 <scope>runtime</scope>
             </dependency>
-
-
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>

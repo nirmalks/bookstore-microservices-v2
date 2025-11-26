@@ -1,4 +1,4 @@
-package com.nirmalks.checkout_service.order.dto;
+package dto;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

@@ -9,25 +9,62 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMqConfig {
-    public static final String ORDER_QUEUE = "order.created.queue";
-    public static final String ORDER_EXCHANGE = "order.exchange";
-    public static final String ORDER_ROUTING_KEY = "order.created";
+    public static final String CHECKOUT_EXCHANGE = "checkout.topic";
+    public static final String CHECKOUT_DLQ_EXCHANGE = "checkout.dlx";
+
+    public static final String QUEUE_EMAIL = "checkout.email.queue";
+    public static final String QUEUE_INVENTORY = "checkout.inventory.queue";
+    public static final String QUEUE_DEAD_LETTER = "checkout.dead.letter.queue";
+
+    public static final String ORDER_ROUTING_KEY = "order.#";
+    public static final String ORDER_CREATED_ROUTING_KEY = "order.created";
+    public static final String CHECKOUT_DLQ_ROUTING_KEY = "dead.letter";
 
     @Bean
-    public Queue queue() {
-        return new Queue(ORDER_QUEUE, true);
+    public TopicExchange checkoutExchange() {
+        return ExchangeBuilder.topicExchange(CHECKOUT_EXCHANGE).durable(true).build();
     }
 
     @Bean
-    public DirectExchange orderExchange() {
-        return new DirectExchange(ORDER_EXCHANGE);
+    public DirectExchange dlqExchange() {
+        return ExchangeBuilder.directExchange(CHECKOUT_DLQ_EXCHANGE).durable(true).build();
     }
 
     @Bean
-    public Binding orderBinding(Queue orderQueue, DirectExchange orderExchange) {
-        return BindingBuilder.bind(orderQueue)
-                .to(orderExchange)
+    public Queue emailQueue() {
+        return QueueBuilder.durable(QUEUE_EMAIL)
+                .withArgument("x-dead-letter-exchange", CHECKOUT_DLQ_EXCHANGE)
+                .withArgument("x-dead-letter-routing-key", "dead.letter")
+                .build();
+    }
+
+    @Bean
+    public Queue inventoryQueue() {
+        return QueueBuilder.durable(QUEUE_INVENTORY)
+                .withArgument("x-dead-letter-exchange", CHECKOUT_DLQ_EXCHANGE)
+                .withArgument("x-dead-letter-routing-key", "dead.letter")
+                .build();
+    }
+
+    @Bean
+    public Queue deadLetterQueue() {
+        return QueueBuilder.durable(QUEUE_DEAD_LETTER).build();
+    }
+
+    @Bean
+    public Binding emailBinding() {
+        return BindingBuilder.bind(emailQueue())
+                .to(checkoutExchange())
                 .with(ORDER_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding inventoryBinding() {
+        return BindingBuilder.bind(inventoryQueue()).to(checkoutExchange()).with(ORDER_CREATED_ROUTING_KEY);
+    }
+    @Bean
+    public Binding dlqBinding() {
+        return BindingBuilder.bind(deadLetterQueue()).to(dlqExchange()).with(CHECKOUT_DLQ_ROUTING_KEY);
     }
 
     @Bean
@@ -41,5 +78,4 @@ public class RabbitMqConfig {
         template.setMessageConverter(messageConverter());
         return template;
     }
-
 }
