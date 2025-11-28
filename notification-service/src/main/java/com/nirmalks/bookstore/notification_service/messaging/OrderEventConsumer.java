@@ -29,4 +29,5 @@ public class OrderEventConsumer {
 		notificationService.sendEmail(message.orderId(), message.email());
 		logger.info("Successfully handed off email task for order: {} and ACKed message.", message.orderId());
 	}
+
 }
