@@ -21,23 +21,7 @@ public class OrderCreatedEventConsumer {
     @RabbitListener(queues = RabbitMqConfig.QUEUE_INVENTORY)
     public void consumeOrderCreatedEvent(OrderMessage message, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         logger.info("Received order event to update inventory: {}", message);
-
-        try {
-            bookService.updateStock(message);
-            // 'false' means single acknowledgment (not multiple messages)
-            channel.basicAck(deliveryTag, false);
-            logger.info("Successfully processed and ACKed order: {}", message.orderId());
-
-        } catch (Exception e) {
-            logger.error("Error processing order {}. Attempting NACK.", message.orderId(), e);
-
-            try {
-                // 'false' means single NACK
-                // 'true' means requeue (send back to queue for retry) and false for DLQ handling.
-                channel.basicNack(deliveryTag, false, false);
-            } catch (Exception nackException) {
-                logger.error("Error during NACK process: {}", nackException.getMessage());
-            }
-        }
+        bookService.updateStock(message);
+        logger.info("Successfully processed and ACKed order: {}", message.orderId());
     }
 }
