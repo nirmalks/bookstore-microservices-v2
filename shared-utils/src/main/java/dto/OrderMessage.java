@@ -9,5 +9,5 @@ public record OrderMessage(String orderId,
                            String email,
                            double totalCost,
                            LocalDateTime placedAt,
-                           List<String> bookTitles) implements Serializable {
+                           List<OrderItemPayload> items) implements Serializable {
 }

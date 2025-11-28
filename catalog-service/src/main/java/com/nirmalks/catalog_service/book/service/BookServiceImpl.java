@@ -10,16 +10,19 @@ import com.nirmalks.catalog_service.book.repository.BookRepository;
 import com.nirmalks.catalog_service.genre.service.GenreService;
 import common.RequestUtils;
 import common.RestPage;
+import dto.OrderMessage;
 import dto.PageRequestDto;
 import exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
@@ -113,5 +116,20 @@ public class BookServiceImpl implements BookService {
                 startDate, endDate, minPrice, maxPrice, sortBy, sortOrder);
         return bookRepository.findAll(specification, pageable).map(BookMapper::toDTO);
 
+    }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "books", allEntries = true),
+            @CacheEvict(value = "book", allEntries = true)
+    })
+    public void updateStock(OrderMessage orderMessage) {
+        orderMessage.items().forEach(item -> {
+            int rowsUpdated = bookRepository.decrementStock(item.bookId(), item.quantity());
+
+            if (rowsUpdated == 0) {
+                throw new RuntimeException("Stock update failed for Book ID: " + item.bookId());
+            }
+        });
     }
 }

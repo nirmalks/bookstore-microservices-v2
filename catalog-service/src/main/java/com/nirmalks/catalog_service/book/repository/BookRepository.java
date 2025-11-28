@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
@@ -22,4 +23,8 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
     Page<Book> findAllByAuthorsId(@Param("authorId") Long authorId, Pageable pageable);
 
     Page<Book> findAll(@Nullable Specification<Book> specification, @NonNull Pageable pageable);
+
+    @Modifying
+    @Query("UPDATE Book b SET b.stock = b.stock - :quantity WHERE b.id = :id AND b.stock >= :quantity")
+    int decrementStock(Long id, int quantity);
 }

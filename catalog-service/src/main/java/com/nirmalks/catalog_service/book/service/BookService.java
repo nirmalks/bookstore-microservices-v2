@@ -3,6 +3,7 @@ package com.nirmalks.catalog_service.book.service;
 import com.nirmalks.catalog_service.book.api.BookRequest;
 import com.nirmalks.catalog_service.book.dto.BookDto;
 import common.RestPage;
+import dto.OrderMessage;
 import dto.PageRequestDto;
 import org.springframework.data.domain.Page;
 
@@ -19,4 +20,5 @@ public interface BookService {
     void updateBookStock(Long bookId, int quantity);
 
     Page<BookDto> getFilteredBooks(String search, String genre, LocalDate startDate, LocalDate endDate, Double minPrice, Double maxPrice, String sortBy, String sortOrder, int page, int size);
+    void updateStock(OrderMessage orderMessage);
 }

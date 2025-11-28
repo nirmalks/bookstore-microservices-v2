@@ -18,6 +18,7 @@ import com.nirmalks.checkout_service.order.repository.OrderRepository;
 import com.nirmalks.checkout_service.order.service.OrderEventPublisher;
 import com.nirmalks.checkout_service.order.service.OrderService;
 import common.RequestUtils;
+import dto.OrderItemPayload;
 import dto.OrderMessage;
 import dto.PageRequestDto;
 import exceptions.ResourceNotFoundException;
@@ -88,8 +89,11 @@ public class OrderServiceImpl implements OrderService {
         var savedOrder = orderRepository.save(order);
         orderItemRepository.saveAll(orderItems);
 
-        List<String> titles = orderItems.stream()
-                .map(item -> item.getBookTitle())
+        List<OrderItemPayload> itemPayloads = orderItems.stream()
+                .map(item -> new OrderItemPayload(
+                        item.getBookId(),
+                        item.getQuantity()
+                ))
                 .toList();
 
         OrderMessage message = new OrderMessage(
@@ -98,7 +102,7 @@ public class OrderServiceImpl implements OrderService {
                 user.getEmail(),
                 savedOrder.getTotalCost(),
                 savedOrder.getPlacedDate(),
-                titles
+                itemPayloads
         );
         orderEventPublisher.publishOrderCreatedEvent(message);
 

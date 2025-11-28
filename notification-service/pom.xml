@@ -98,6 +98,7 @@
                     <image>
                         <builder>paketobuildpacks/builder-jammy-base</builder>
                     </image>
+                    <pullPolicy>IF_NOT_PRESENT</pullPolicy>
                 </configuration>
             </plugin>
             <plugin>
