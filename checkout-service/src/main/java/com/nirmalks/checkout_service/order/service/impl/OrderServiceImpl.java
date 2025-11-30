@@ -15,7 +15,7 @@ import com.nirmalks.checkout_service.order.entity.OrderItem;
 import com.nirmalks.checkout_service.order.entity.OrderStatus;
 import com.nirmalks.checkout_service.order.repository.OrderItemRepository;
 import com.nirmalks.checkout_service.order.repository.OrderRepository;
-import com.nirmalks.checkout_service.order.service.OrderEventPublisher;
+import com.nirmalks.checkout_service.order.messaging.OrderEventPublisher;
 import com.nirmalks.checkout_service.order.service.OrderService;
 import common.RequestUtils;
 import dto.OrderItemPayload;
@@ -27,6 +27,7 @@ import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -189,6 +190,25 @@ public class OrderServiceImpl implements OrderService {
                     return ex;
                 })
         .onErrorResume(throwable -> getBookDtoFallback(bookId, throwable));
+    }
+
+    @Transactional
+    public void updateOrderStatusByEvent(String orderIdString, OrderStatus newStatus, String reason) {
+        try {
+            Long orderId = Long.valueOf(orderIdString);
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+            if (order.getOrderStatus() == OrderStatus.CANCELLED || order.getOrderStatus() == OrderStatus.CONFIRMED) {
+                logger.warn("Order {} is already {}, ignoring update to {}", orderId, order.getOrderStatus(), newStatus);
+                return;
+            }
+            order.setOrderStatus(newStatus);
+            orderRepository.save(order);
+            logger.info("Updated Order {} status to {}. Reason: {}", orderId, newStatus, reason);
+        } catch (Exception e) {
+            logger.error("Failed to update order status for ID: {}", orderIdString, e);
+            throw e;
+        }
     }
 
     private UserDto getUserDtoFallback(Long userId, Throwable t) {

@@ -1,5 +1,6 @@
 package com.nirmalks.checkout_service.config;
 
+import org.springframework.amqp.support.converter.DefaultClassMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -19,6 +20,12 @@ public class RabbitMqConfig {
     public static final String ORDER_ROUTING_KEY = "order.#";
     public static final String ORDER_CREATED_ROUTING_KEY = "order.created";
     public static final String CHECKOUT_DLQ_ROUTING_KEY = "dead.letter";
+
+    public static final String INVENTORY_EXCHANGE = "inventory.events";
+    public static final String STOCK_RESERVATION_SUCCESS_ROUTING_KEY = "stock.reservation.success";
+    public static final String STOCK_RESERVATION_FAILED_ROUTING_KEY = "stock.reservation.failed";
+    public static final String ORDER_INVENTORY_RESULT_QUEUE = "order.inventory.result.queue";
+    public static final String STOCK_RESERVATION_WILDCARD_KEY = "stock.reservation.#";
 
     @Bean
     public TopicExchange checkoutExchange() {
@@ -68,8 +75,37 @@ public class RabbitMqConfig {
     }
 
     @Bean
+    public TopicExchange inventoryExchange() {
+        return ExchangeBuilder.topicExchange(INVENTORY_EXCHANGE).durable(true).build();
+    }
+
+    @Bean
+    public Queue orderInventoryResultQueue() {
+        return QueueBuilder.durable(ORDER_INVENTORY_RESULT_QUEUE)
+        .withArgument("x-dead-letter-exchange", CHECKOUT_DLQ_EXCHANGE)
+                .withArgument("x-dead-letter-routing-key", CHECKOUT_DLQ_ROUTING_KEY)
+                .build();
+    }
+
+    @Bean
+    public Binding inventoryResultBinding() {
+        return BindingBuilder.bind(orderInventoryResultQueue())
+                .to(inventoryExchange())
+                .with(STOCK_RESERVATION_WILDCARD_KEY);
+    }
+
+    @Bean
     public Jackson2JsonMessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
+        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
+
+        DefaultClassMapper classMapper = new DefaultClassMapper();
+
+        classMapper.setTrustedPackages("dto");
+
+        // classMapper.setTrustedPackages("*");
+
+        converter.setClassMapper(classMapper);
+        return converter;
     }
 
     @Bean

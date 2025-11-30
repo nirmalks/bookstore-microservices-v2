@@ -19,4 +19,5 @@ public interface OrderService {
     Order getOrder(Long orderId);
 
     void updateOrderStatus(Long orderId, OrderStatus status);
+    void updateOrderStatusByEvent(String orderIdString, OrderStatus newStatus, String reason);
 }

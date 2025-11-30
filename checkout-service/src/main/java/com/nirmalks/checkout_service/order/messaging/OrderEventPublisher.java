@@ -1,4 +1,4 @@
-package com.nirmalks.checkout_service.order.service;
+package com.nirmalks.checkout_service.order.messaging;
 
 import com.nirmalks.checkout_service.config.RabbitMqConfig;
 
@@ -14,7 +14,6 @@ public class OrderEventPublisher {
     private final Logger logger = LoggerFactory.getLogger(OrderEventPublisher.class);
 
     private String checkoutExchange = RabbitMqConfig.CHECKOUT_EXCHANGE;
-
     private String orderCreatedRoutingKey = RabbitMqConfig.ORDER_CREATED_ROUTING_KEY;
 
     public OrderEventPublisher(RabbitTemplate rabbitTemplate) {
