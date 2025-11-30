@@ -5,22 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a0fba06-e566-4729-86db-4c73a9ef2d55" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/messaging/InventoryResultConsumer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/checkout-service/src/main/resources/db/migration/V2__add_completed_orderstatus.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared-utils/src/main/java/dto/StockReservationFailedEvent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared-utils/src/main/java/dto/StockReservationSuccessEvent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/messaging/OrderCreatedEventConsumer.java" beforeDir="false" afterPath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/messaging/OrderCreatedEventConsumer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/messaging/RabbitMqConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/messaging/RabbitMqConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/catalog-service/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/catalog-service/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/config/RabbitMqConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/config/RabbitMqConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/entity/OrderStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/entity/OrderStatus.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/service/OrderEventPublisher.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/messaging/OrderEventPublisher.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/service/OrderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/service/OrderService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/service/impl/OrderServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/service/impl/OrderServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config-server/src/main/resources/config/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/config-server/src/main/resources/config/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config-server/src/main/resources/config/checkout-service.properties" beforeDir="false" afterPath="$PROJECT_DIR$/config-server/src/main/resources/config/checkout-service.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config-server/src/main/resources/config/notification-service.properties" beforeDir="false" afterPath="$PROJECT_DIR$/config-server/src/main/resources/config/notification-service.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/src/main/java/com/nirmalks/bookstore/notification_service/messaging/RabbitMqConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/src/main/java/com/nirmalks/bookstore/notification_service/messaging/RabbitMqConfig.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,6 +26,9 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$MAVEN_REPOSITORY$/com/netflix/eureka/eureka-client/2.0.4/eureka-client-2.0.4.jar!/com/netflix/discovery/shared/resolver/aws/ConfigClusterResolver.class" root0="SKIP_INSPECTION" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 5
 }</component>
@@ -46,24 +37,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Application.ConfigServerApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Application.DiscoveryServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.CatalogServiceApplicationTests.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/projects/showcase/bookstore-microservices-async&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;Docker&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.ApiGatewayApplication.executor": "Run",
+    "Application.ConfigServerApplication.executor": "Run",
+    "Application.DiscoveryServiceApplication.executor": "Run",
+    "JUnit.CatalogServiceApplicationTests.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "master",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/projects/showcase/bookstore-microservices-async",
+    "project.structure.last.edited": "SDKs",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\projects\showcase\bookstore-microservices-async\notification-service\src\main\java\com\nirmalks\bookstore\notification_service" />

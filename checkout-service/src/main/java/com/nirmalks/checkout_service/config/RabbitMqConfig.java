@@ -1,5 +1,6 @@
 package com.nirmalks.checkout_service.config;
 
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.support.converter.DefaultClassMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.amqp.core.*;
@@ -97,13 +98,8 @@ public class RabbitMqConfig {
     @Bean
     public Jackson2JsonMessageConverter messageConverter() {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
-
         DefaultClassMapper classMapper = new DefaultClassMapper();
-
         classMapper.setTrustedPackages("dto");
-
-        // classMapper.setTrustedPackages("*");
-
         converter.setClassMapper(classMapper);
         return converter;
     }
@@ -112,6 +108,17 @@ public class RabbitMqConfig {
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(messageConverter());
+        template.setObservationEnabled(true);
         return template;
+    }
+
+    @Bean
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
+            ConnectionFactory connectionFactory) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory);
+        factory.setMessageConverter(messageConverter());
+        factory.setObservationEnabled(true);
+        return factory;
     }
 }
