@@ -5,10 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a0fba06-e566-4729-86db-4c73a9ef2d55" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/messaging/InventoryEventPublisher.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/messaging/RabbitMqConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/messaging/RabbitMqConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/config/RabbitMqConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/config/RabbitMqConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-service/src/main/java/com/nirmalks/bookstore/notification_service/messaging/RabbitMqConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/src/main/java/com/nirmalks/bookstore/notification_service/messaging/RabbitMqConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/messaging/OrderCreatedEventConsumer.java" beforeDir="false" afterPath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/messaging/OrderCreatedEventConsumer.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
