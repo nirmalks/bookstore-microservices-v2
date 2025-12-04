@@ -17,6 +17,7 @@ import com.nirmalks.checkout_service.order.repository.OrderItemRepository;
 import com.nirmalks.checkout_service.order.repository.OrderRepository;
 import com.nirmalks.checkout_service.order.messaging.OrderEventPublisher;
 import com.nirmalks.checkout_service.order.service.OrderService;
+import com.nirmalks.checkout_service.order.service.OutboxService;
 import common.RequestUtils;
 import dto.OrderItemPayload;
 import dto.OrderMessage;
@@ -48,28 +49,29 @@ import java.util.concurrent.Executors;
 @Service
 public class OrderServiceImpl implements OrderService {
     private final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
-    private OrderRepository orderRepository;
+    private final OrderRepository orderRepository;
 
-    private OrderItemRepository orderItemRepository;
+    private final OrderItemRepository orderItemRepository;
     private final CartRepository cartRepository;
     private final WebClient catalogServiceWebClient;
     private final WebClient userServiceWebClient;
-    private final OrderEventPublisher orderEventPublisher;
+    private final OutboxService outboxService;
 
     @Autowired
     public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
                             CartRepository cartRepository, @Qualifier("catalogServiceWebClient") WebClient catalogServiceWebClient,
                             @Qualifier("userServiceWebClient") WebClient userServiceWebClient,
-                            OrderEventPublisher orderEventPublisher) {
+                            OutboxService outboxService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartRepository = cartRepository;
         this.catalogServiceWebClient = catalogServiceWebClient;
         this.userServiceWebClient = userServiceWebClient;
-        this.orderEventPublisher = orderEventPublisher;
+        this.outboxService = outboxService;
     }
 
     @Override
+    @Transactional
     public OrderResponse createOrder(DirectOrderRequest directOrderRequest) {
         var user = getUserDtoFromUserService(directOrderRequest.getUserId()).block();
 
@@ -105,7 +107,7 @@ public class OrderServiceImpl implements OrderService {
                 savedOrder.getPlacedDate(),
                 itemPayloads
         );
-        orderEventPublisher.publishOrderCreatedEvent(message);
+        outboxService.saveOrderCreatedEvent(savedOrder.getId().toString(), message);
 
         return OrderMapper.toResponse(user, savedOrder,"Order placed successfully.");
     }

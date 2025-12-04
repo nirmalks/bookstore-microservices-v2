@@ -5,9 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a0fba06-e566-4729-86db-4c73a9ef2d55" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/messaging/InventoryEventPublisher.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/entity/OrderMessageJsonConverter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/entity/Outbox.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/repository/OutboxRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/service/OutboxRelayService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/service/OutboxService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/checkout-service/src/main/resources/db/migration/V3__outbox_add_shipping_details_to_order.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/messaging/OrderCreatedEventConsumer.java" beforeDir="false" afterPath="$PROJECT_DIR$/catalog-service/src/main/java/com/nirmalks/catalog_service/messaging/OrderCreatedEventConsumer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/CheckoutServiceApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/CheckoutServiceApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/service/impl/OrderServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/service/impl/OrderServiceImpl.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,24 +43,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.ApiGatewayApplication.executor": "Run",
-    "Application.ConfigServerApplication.executor": "Run",
-    "Application.DiscoveryServiceApplication.executor": "Run",
-    "JUnit.CatalogServiceApplicationTests.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/projects/showcase/bookstore-microservices-async",
-    "project.structure.last.edited": "SDKs",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Application.ConfigServerApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Application.DiscoveryServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.CatalogServiceApplicationTests.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/projects/showcase/bookstore-microservices-async&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\projects\showcase\bookstore-microservices-async\notification-service\src\main\java\com\nirmalks\bookstore\notification_service" />
