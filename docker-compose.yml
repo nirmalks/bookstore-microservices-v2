@@ -102,14 +102,13 @@ services:
     depends_on:
       discovery-service:
         condition: service_healthy
-      config-server:
-        condition: service_healthy
       auth-server:
         condition: service_healthy
       user-service:
         condition: service_healthy
       otel-collector:
         condition: service_started
+    restart: on-failure
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8080'"]
       interval: 10s
@@ -128,14 +127,13 @@ services:
         condition: service_healthy
       user-db:
         condition: service_healthy
-      config-server:
-        condition: service_healthy
       otel-collector:
         condition: service_started
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://user-db:5432/bookstore_user_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin123
+    restart: on-failure
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/9001'"]
       interval: 10s
@@ -154,14 +152,13 @@ services:
         condition: service_healthy
       catalog-db:
         condition: service_healthy
-      config-server:
-        condition: service_healthy
       otel-collector:
         condition: service_started
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://catalog-db:5432/bookstore_catalog_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin123
+    restart: on-failure
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8082'"]
       interval: 10s
@@ -180,14 +177,13 @@ services:
         condition: service_healthy
       user-db:
         condition: service_healthy
-      config-server:
-        condition: service_healthy
       otel-collector:
         condition: service_started
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://user-db:5432/bookstore_user_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin123
+    restart: on-failure
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8081'"]
       interval: 10s
@@ -206,14 +202,13 @@ services:
         condition: service_healthy
       checkout-db:
         condition: service_healthy
-      config-server:
-        condition: service_healthy
       otel-collector:
         condition: service_started
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://checkout-db:5432/bookstore_checkout_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin123
+    restart: on-failure
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8083'"]
       interval: 10s
@@ -229,12 +224,11 @@ services:
     depends_on:
       discovery-service:
         condition: service_healthy
-      config-server:
-        condition: service_healthy
       otel-collector:
         condition: service_started
       rabbitmq:
         condition: service_healthy
+    restart: on-failure
     healthcheck:
       test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8084'" ]
       interval: 10s
