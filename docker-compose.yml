@@ -258,6 +258,7 @@ services:
       - "9091:9090" # Prometheus scraper target
     depends_on:
       - jaeger
+      - loki
     restart: on-failure
 
   prometheus:
@@ -271,6 +272,15 @@ services:
       - otel-collector
     restart: on-failure
 
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/loki
+    restart: on-failure
+
   grafana:
     image: grafana/grafana
     environment:
@@ -278,8 +288,12 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     ports:
       - "3000:3000"
+    volumes:
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
     depends_on:
       prometheus:
+        condition: service_started
+      loki:
         condition: service_started
 
   alertmanager:
@@ -294,3 +308,4 @@ volumes:
   catalog-db-data:
   checkout-db-data:
   rabbitmq-data:
+  loki-data:
