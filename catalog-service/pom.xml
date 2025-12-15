@@ -170,6 +170,10 @@
                     <pullPolicy>IF_NOT_PRESENT</pullPolicy>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>io.spring.javaformat</groupId>
+				<artifactId>spring-javaformat-maven-plugin</artifactId>
+			</plugin>
 		</plugins>
 	</build>
 
