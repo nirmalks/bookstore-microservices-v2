@@ -31,118 +31,107 @@ import java.util.Map;
 import java.util.Set;
 
 public class PasswordAuthenticationProvider implements AuthenticationProvider {
-    private final Logger logger = LoggerFactory.getLogger(PasswordAuthenticationProvider.class);
-    private final WebClient webClient;
-    private final OAuth2AuthorizationService authorizationService;
-    private final OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator;
 
-    public PasswordAuthenticationProvider(OAuth2AuthorizationService authorizationService,
-                                          OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator,
-                                          @Qualifier("userServiceWebClient") WebClient webClient) {
-        this.authorizationService = authorizationService;
-        this.tokenGenerator = tokenGenerator;
-        this.webClient = webClient;
-    }
+	private final Logger logger = LoggerFactory.getLogger(PasswordAuthenticationProvider.class);
 
-    @Override
-    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        OAuth2PasswordAuthenticationToken passwordAuth = (OAuth2PasswordAuthenticationToken) authentication;
-        Map<String, Object> parameters = passwordAuth.getAdditionalParameters();
-        RegisteredClient registeredClient = passwordAuth.getRegisteredClient();
-        Authentication clientPrincipal = passwordAuth.getClientPrincipal();
+	private final WebClient webClient;
 
-        String username = (String) parameters.get("username");
-        String password = (String) parameters.get("password");
+	private final OAuth2AuthorizationService authorizationService;
 
-        try {
-            LoginRequest loginRequest = new LoginRequest();
-            loginRequest.setUsername(username);
-            loginRequest.setPassword(password);
+	private final OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator;
 
-            UserDto userDto = webClient.post()
-                    .uri("/api/internal/users/auth")
-                    .attributes(ServerOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId("auth-server-client-id"))
-                    .bodyValue(loginRequest)
-                    .retrieve()
-                    .bodyToMono(UserDto.class)
-                    .block();
-            if (userDto == null || userDto.getId() == null || userDto.getUsername() == null) {
-                throw new BadCredentialsException("User authentication failed: Incomplete user data.");
-            }
+	public PasswordAuthenticationProvider(OAuth2AuthorizationService authorizationService,
+			OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator,
+			@Qualifier("userServiceWebClient") WebClient webClient) {
+		this.authorizationService = authorizationService;
+		this.tokenGenerator = tokenGenerator;
+		this.webClient = webClient;
+	}
 
-            UserRole role = userDto.getRole();
-            List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
-            CustomUserDetails customUserDetails = new CustomUserDetails(
-                    userDto.getId(),
-                    userDto.getUsername(),
-                    userDto.getHashedPassword(),
-                    authorities
-            );
+	@Override
+	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+		OAuth2PasswordAuthenticationToken passwordAuth = (OAuth2PasswordAuthenticationToken) authentication;
+		Map<String, Object> parameters = passwordAuth.getAdditionalParameters();
+		RegisteredClient registeredClient = passwordAuth.getRegisteredClient();
+		Authentication clientPrincipal = passwordAuth.getClientPrincipal();
 
-            UsernamePasswordAuthenticationToken customPrincipal = new UsernamePasswordAuthenticationToken(
-                    customUserDetails,
-                    password,
-                    authorities
-            );
+		String username = (String) parameters.get("username");
+		String password = (String) parameters.get("password");
 
-            OAuth2TokenContext tokenContext = DefaultOAuth2TokenContext.builder()
-                    .registeredClient(registeredClient)
-                    .principal(customPrincipal)
-                    .authorizationServerContext(AuthorizationServerContextHolder.getContext())
-                    .authorizationGrantType(new AuthorizationGrantType("password"))
-                    .authorizationGrant(passwordAuth)
-                    .tokenType(OAuth2TokenType.ACCESS_TOKEN)
-                    .build();
+		try {
+			LoginRequest loginRequest = new LoginRequest();
+			loginRequest.setUsername(username);
+			loginRequest.setPassword(password);
 
-            OAuth2Token token = this.tokenGenerator.generate(tokenContext);
+			UserDto userDto = webClient.post()
+				.uri("/api/internal/users/auth")
+				.attributes(ServerOAuth2AuthorizedClientExchangeFilterFunction
+					.clientRegistrationId("auth-server-client-id"))
+				.bodyValue(loginRequest)
+				.retrieve()
+				.bodyToMono(UserDto.class)
+				.block();
+			if (userDto == null || userDto.getId() == null || userDto.getUsername() == null) {
+				throw new BadCredentialsException("User authentication failed: Incomplete user data.");
+			}
 
-            if (token == null) {
-                OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.SERVER_ERROR,
-                        "The token generator failed to generate the access token.", null);
-                throw new OAuth2AuthenticationException(error);
-            }
+			UserRole role = userDto.getRole();
+			List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+			CustomUserDetails customUserDetails = new CustomUserDetails(userDto.getId(), userDto.getUsername(),
+					userDto.getHashedPassword(), authorities);
 
-            Set<String> scopes = registeredClient.getScopes();
-            OAuth2AccessToken accessToken = new OAuth2AccessToken(
-                    OAuth2AccessToken.TokenType.BEARER,
-                    token.getTokenValue(),
-                    token.getIssuedAt(),
-                    token.getExpiresAt(),
-                    scopes
-            );
+			UsernamePasswordAuthenticationToken customPrincipal = new UsernamePasswordAuthenticationToken(
+					customUserDetails, password, authorities);
 
-            Map<String, Object> metadata = Map.of(
-                    "username", userDto.getUsername(),
-                    "userId", userDto.getId(),
-                    "role", userDto.getRole().name()
-            );
+			OAuth2TokenContext tokenContext = DefaultOAuth2TokenContext.builder()
+				.registeredClient(registeredClient)
+				.principal(customPrincipal)
+				.authorizationServerContext(AuthorizationServerContextHolder.getContext())
+				.authorizationGrantType(new AuthorizationGrantType("password"))
+				.authorizationGrant(passwordAuth)
+				.tokenType(OAuth2TokenType.ACCESS_TOKEN)
+				.build();
 
-            OAuth2Authorization authorization = OAuth2Authorization.withRegisteredClient(registeredClient)
-                    .principalName(username)
-                    .authorizationGrantType(new AuthorizationGrantType("password"))
-                    .token(accessToken, (tokenMetadata) -> tokenMetadata.putAll(metadata))
-                    .build();
+			OAuth2Token token = this.tokenGenerator.generate(tokenContext);
 
-            this.authorizationService.save(authorization);
+			if (token == null) {
+				OAuth2Error error = new OAuth2Error(OAuth2ErrorCodes.SERVER_ERROR,
+						"The token generator failed to generate the access token.", null);
+				throw new OAuth2AuthenticationException(error);
+			}
 
-            return new OAuth2AccessTokenAuthenticationToken(
-                    registeredClient,
-                    clientPrincipal,
-                    accessToken,
-                    null,
-                    metadata
-            );
-        } catch (WebClientResponseException e) {
-            logger.error("WebClient call to user service failed: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new BadCredentialsException("Invalid credentials: User service authentication failed.", e);
-        } catch (Exception e) {
-            logger.error("An unexpected error occurred during password authentication: {}", e.getMessage());
-            throw new BadCredentialsException("Invalid credentials", e);
-        }
-    }
+			Set<String> scopes = registeredClient.getScopes();
+			OAuth2AccessToken accessToken = new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER,
+					token.getTokenValue(), token.getIssuedAt(), token.getExpiresAt(), scopes);
 
-    @Override
-    public boolean supports(Class<?> authentication) {
-        return OAuth2PasswordAuthenticationToken.class.isAssignableFrom(authentication);
-    }
+			Map<String, Object> metadata = Map.of("username", userDto.getUsername(), "userId", userDto.getId(), "role",
+					userDto.getRole().name());
+
+			OAuth2Authorization authorization = OAuth2Authorization.withRegisteredClient(registeredClient)
+				.principalName(username)
+				.authorizationGrantType(new AuthorizationGrantType("password"))
+				.token(accessToken, (tokenMetadata) -> tokenMetadata.putAll(metadata))
+				.build();
+
+			this.authorizationService.save(authorization);
+
+			return new OAuth2AccessTokenAuthenticationToken(registeredClient, clientPrincipal, accessToken, null,
+					metadata);
+		}
+		catch (WebClientResponseException e) {
+			logger.error("WebClient call to user service failed: {} - {}", e.getStatusCode(),
+					e.getResponseBodyAsString());
+			throw new BadCredentialsException("Invalid credentials: User service authentication failed.", e);
+		}
+		catch (Exception e) {
+			logger.error("An unexpected error occurred during password authentication: {}", e.getMessage());
+			throw new BadCredentialsException("Invalid credentials", e);
+		}
+	}
+
+	@Override
+	public boolean supports(Class<?> authentication) {
+		return OAuth2PasswordAuthenticationToken.class.isAssignableFrom(authentication);
+	}
+
 }

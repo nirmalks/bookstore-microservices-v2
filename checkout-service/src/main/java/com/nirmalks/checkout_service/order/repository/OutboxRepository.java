@@ -9,5 +9,7 @@ import java.util.List;
 
 @Repository
 public interface OutboxRepository extends JpaRepository<Outbox, Long> {
-    List<Outbox> findByStatusOrderByCreatedAtAsc(Outbox.EventStatus status, Pageable pageable);
+
+	List<Outbox> findByStatusOrderByCreatedAtAsc(Outbox.EventStatus status, Pageable pageable);
+
 }

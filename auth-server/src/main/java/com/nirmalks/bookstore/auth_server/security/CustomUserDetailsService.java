@@ -16,33 +16,31 @@ import java.util.Optional;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
-    private final WebClient webClient;
-    private final String userServiceBaseUrl;
 
-    public CustomUserDetailsService(WebClient webClient,
-                                    @Value("${user-service.base-url}") String userServiceBaseUrl) {
-        this.webClient = webClient;
-        this.userServiceBaseUrl = userServiceBaseUrl;
-    }
+	private final WebClient webClient;
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        String url = userServiceBaseUrl + "/api/internal/users/by-username/{username}";
-        Optional<UserDto> userDtoOptional = webClient.get()
-                .uri(url, username)
-                .retrieve()
-                .bodyToMono(UserDto.class)
-                .onErrorResume(e -> Mono.empty())
-                .blockOptional();
+	private final String userServiceBaseUrl;
 
-        UserDto userDto = userDtoOptional
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-        GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + userDto.getRole().name());
-        return new CustomUserDetails(
-                userDto.getId(),
-                userDto.getUsername(),
-                userDto.getHashedPassword(),
-                List.of(authority)
-        );
-    }
+	public CustomUserDetailsService(WebClient webClient, @Value("${user-service.base-url}") String userServiceBaseUrl) {
+		this.webClient = webClient;
+		this.userServiceBaseUrl = userServiceBaseUrl;
+	}
+
+	@Override
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		String url = userServiceBaseUrl + "/api/internal/users/by-username/{username}";
+		Optional<UserDto> userDtoOptional = webClient.get()
+			.uri(url, username)
+			.retrieve()
+			.bodyToMono(UserDto.class)
+			.onErrorResume(e -> Mono.empty())
+			.blockOptional();
+
+		UserDto userDto = userDtoOptional
+			.orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+		GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + userDto.getRole().name());
+		return new CustomUserDetails(userDto.getId(), userDto.getUsername(), userDto.getHashedPassword(),
+				List.of(authority));
+	}
+
 }

@@ -81,6 +81,23 @@
                         </execution>
                     </executions>
                 </plugin>
+                <!-- Alternative: Maven Git Code Format Plugin (uncomment to use)
+                <plugin>
+                    <groupId>com.cosium.code</groupId>
+                    <artifactId>maven-git-code-format</artifactId>
+                    <version>5.3</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>install-hooks</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <skip>false</skip>
+                    </configuration>
+                </plugin>
+                -->
             </plugins>
         </pluginManagement>
     </build>

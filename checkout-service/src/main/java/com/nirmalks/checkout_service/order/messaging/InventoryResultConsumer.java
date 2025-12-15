@@ -15,22 +15,26 @@ import org.springframework.stereotype.Service;
 @Service
 @RabbitListener(queues = RabbitMqConfig.ORDER_INVENTORY_RESULT_QUEUE)
 public class InventoryResultConsumer {
-    private final OrderService orderService;
-    private final Logger logger = LoggerFactory.getLogger(InventoryResultConsumer.class);
 
-    public InventoryResultConsumer(OrderService orderService) {
-        this.orderService = orderService;
-    }
+	private final OrderService orderService;
 
-    @RabbitHandler
-    public void handleSuccess(StockReservationSuccessEvent event) {
-        logger.info("updated success stock reservation event: {}", event);
-        orderService.updateOrderStatusByEvent(event.orderId(), OrderStatus.CONFIRMED, "Stock confirmed.");
-    }
+	private final Logger logger = LoggerFactory.getLogger(InventoryResultConsumer.class);
 
-    @RabbitHandler
-    public void handleFailure(StockReservationFailedEvent event) {
-        logger.info("updated failed stock reservation event: {}", event);
-        orderService.updateOrderStatusByEvent(event.orderId(), OrderStatus.CANCELLED, "Stock reservation failed: " + event.reason());
-    }
+	public InventoryResultConsumer(OrderService orderService) {
+		this.orderService = orderService;
+	}
+
+	@RabbitHandler
+	public void handleSuccess(StockReservationSuccessEvent event) {
+		logger.info("updated success stock reservation event: {}", event);
+		orderService.updateOrderStatusByEvent(event.orderId(), OrderStatus.CONFIRMED, "Stock confirmed.");
+	}
+
+	@RabbitHandler
+	public void handleFailure(StockReservationFailedEvent event) {
+		logger.info("updated failed stock reservation event: {}", event);
+		orderService.updateOrderStatusByEvent(event.orderId(), OrderStatus.CANCELLED,
+				"Stock reservation failed: " + event.reason());
+	}
+
 }

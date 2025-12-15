@@ -11,97 +11,100 @@ import java.time.LocalDateTime;
 @Table(name = "outbox")
 public class Outbox {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(name = "aggregate_type", nullable = false)
-    private String aggregateType = "Order";
+	@Column(name = "aggregate_type", nullable = false)
+	private String aggregateType = "Order";
 
-    @Column(name = "aggregate_id", nullable = false)
-    private String aggregateId;
+	@Column(name = "aggregate_id", nullable = false)
+	private String aggregateId;
 
-    @Column(name = "event_type", nullable = false)
-    private String eventType;
+	@Column(name = "event_type", nullable = false)
+	private String eventType;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "payload", columnDefinition = "JSONB", nullable = false)
-    private OrderMessage payload;
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(name = "payload", columnDefinition = "JSONB", nullable = false)
+	private OrderMessage payload;
 
-    @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "status", nullable = false)
-    private EventStatus status = EventStatus.PENDING;
+	@Enumerated(EnumType.STRING)
+	@JdbcTypeCode(SqlTypes.NAMED_ENUM)
+	@Column(name = "status", nullable = false)
+	private EventStatus status = EventStatus.PENDING;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+	@Column(name = "created_at", nullable = false)
+	private LocalDateTime createdAt = LocalDateTime.now();
 
-    public enum EventStatus {
-        PENDING, SENT, FAILED
-    }
+	public enum EventStatus {
 
-    public Outbox(String aggregateId, String eventType, OrderMessage payload) {
-        this.aggregateId = aggregateId;
-        this.eventType = eventType;
-        this.payload = payload;
-    }
+		PENDING, SENT, FAILED
 
-    public Outbox() {
-    }
+	}
 
-    public Long getId() {
-        return id;
-    }
+	public Outbox(String aggregateId, String eventType, OrderMessage payload) {
+		this.aggregateId = aggregateId;
+		this.eventType = eventType;
+		this.payload = payload;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public Outbox() {
+	}
 
-    public String getAggregateType() {
-        return aggregateType;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setAggregateType(String aggregateType) {
-        this.aggregateType = aggregateType;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public String getAggregateId() {
-        return aggregateId;
-    }
+	public String getAggregateType() {
+		return aggregateType;
+	}
 
-    public void setAggregateId(String aggregateId) {
-        this.aggregateId = aggregateId;
-    }
+	public void setAggregateType(String aggregateType) {
+		this.aggregateType = aggregateType;
+	}
 
-    public String getEventType() {
-        return eventType;
-    }
+	public String getAggregateId() {
+		return aggregateId;
+	}
 
-    public void setEventType(String eventType) {
-        this.eventType = eventType;
-    }
+	public void setAggregateId(String aggregateId) {
+		this.aggregateId = aggregateId;
+	}
 
-    public OrderMessage getPayload() {
-        return payload;
-    }
+	public String getEventType() {
+		return eventType;
+	}
 
-    public void setPayload(OrderMessage payload) {
-        this.payload = payload;
-    }
+	public void setEventType(String eventType) {
+		this.eventType = eventType;
+	}
 
-    public EventStatus getStatus() {
-        return status;
-    }
+	public OrderMessage getPayload() {
+		return payload;
+	}
 
-    public void setStatus(EventStatus status) {
-        this.status = status;
-    }
+	public void setPayload(OrderMessage payload) {
+		this.payload = payload;
+	}
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+	public EventStatus getStatus() {
+		return status;
+	}
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+	public void setStatus(EventStatus status) {
+		this.status = status;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
 }

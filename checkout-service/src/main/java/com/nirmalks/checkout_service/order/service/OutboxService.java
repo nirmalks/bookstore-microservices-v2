@@ -10,20 +10,20 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class OutboxService {
-    private final OutboxRepository outboxRepository;
-    private final Logger logger = LoggerFactory.getLogger(OutboxService.class);
-    public OutboxService(OutboxRepository outboxRepository) {
-        this.outboxRepository = outboxRepository;
-    }
 
-    @Transactional(Transactional.TxType.MANDATORY)
-    public void saveOrderCreatedEvent(String orderIdString, OrderMessage message) {
-        logger.info("Outbox event save is triggered from order creation");
-        Outbox outboxEvent = new Outbox(
-                orderIdString,
-                "OrderCreated",
-                message
-        );
-        outboxRepository.save(outboxEvent);
-    }
+	private final OutboxRepository outboxRepository;
+
+	private final Logger logger = LoggerFactory.getLogger(OutboxService.class);
+
+	public OutboxService(OutboxRepository outboxRepository) {
+		this.outboxRepository = outboxRepository;
+	}
+
+	@Transactional(Transactional.TxType.MANDATORY)
+	public void saveOrderCreatedEvent(String orderIdString, OrderMessage message) {
+		logger.info("Outbox event save is triggered from order creation");
+		Outbox outboxEvent = new Outbox(orderIdString, "OrderCreated", message);
+		outboxRepository.save(outboxEvent);
+	}
+
 }

@@ -1,5 +1,4 @@
 package dto;
 
-public record StockReservationSuccessEvent(
-        String orderId
-) {}
+public record StockReservationSuccessEvent(String orderId) {
+}

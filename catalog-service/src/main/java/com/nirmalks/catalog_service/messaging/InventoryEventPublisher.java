@@ -9,32 +9,29 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class InventoryEventPublisher {
-    private final Logger logger = LoggerFactory.getLogger(InventoryEventPublisher.class);
-    private final RabbitTemplate rabbitTemplate;
 
-    public InventoryEventPublisher(RabbitTemplate rabbitTemplate) {
-        this.rabbitTemplate = rabbitTemplate;
-    }
+	private final Logger logger = LoggerFactory.getLogger(InventoryEventPublisher.class);
 
-    public void publishStockReservedEvent(String orderId) {
-        StockReservationSuccessEvent event = new StockReservationSuccessEvent(orderId);
-        logger.info("Publishing Stock Reserved event for Order ID: {}", orderId);
+	private final RabbitTemplate rabbitTemplate;
 
-        rabbitTemplate.convertAndSend(
-                RabbitMqConfig.INVENTORY_EXCHANGE,
-                RabbitMqConfig.STOCK_RESERVATION_SUCCESS_ROUTING_KEY,
-                event
-        );
-    }
+	public InventoryEventPublisher(RabbitTemplate rabbitTemplate) {
+		this.rabbitTemplate = rabbitTemplate;
+	}
 
-    public void publishStockFailedEvent(String orderId, String reason) {
-        StockReservationFailedEvent event = new StockReservationFailedEvent(orderId, reason);
-        logger.error("Publishing Stock Failed event for Order ID: {} with reason: {}", orderId, reason);
+	public void publishStockReservedEvent(String orderId) {
+		StockReservationSuccessEvent event = new StockReservationSuccessEvent(orderId);
+		logger.info("Publishing Stock Reserved event for Order ID: {}", orderId);
 
-        rabbitTemplate.convertAndSend(
-                RabbitMqConfig.INVENTORY_EXCHANGE,
-                RabbitMqConfig.STOCK_RESERVATION_FAILED_ROUTING_KEY,
-                event
-        );
-    }
+		rabbitTemplate.convertAndSend(RabbitMqConfig.INVENTORY_EXCHANGE,
+				RabbitMqConfig.STOCK_RESERVATION_SUCCESS_ROUTING_KEY, event);
+	}
+
+	public void publishStockFailedEvent(String orderId, String reason) {
+		StockReservationFailedEvent event = new StockReservationFailedEvent(orderId, reason);
+		logger.error("Publishing Stock Failed event for Order ID: {} with reason: {}", orderId, reason);
+
+		rabbitTemplate.convertAndSend(RabbitMqConfig.INVENTORY_EXCHANGE,
+				RabbitMqConfig.STOCK_RESERVATION_FAILED_ROUTING_KEY, event);
+	}
+
 }

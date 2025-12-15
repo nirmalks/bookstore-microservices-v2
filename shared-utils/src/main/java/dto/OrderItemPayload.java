@@ -1,6 +1,4 @@
 package dto;
 
-public record OrderItemPayload(
-        Long bookId,
-        Integer quantity
-) {}
+public record OrderItemPayload(Long bookId, Integer quantity) {
+}

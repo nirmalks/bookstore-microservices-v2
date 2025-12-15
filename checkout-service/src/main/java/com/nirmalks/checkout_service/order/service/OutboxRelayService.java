@@ -15,43 +15,43 @@ import java.util.List;
 
 @Service
 public class OutboxRelayService {
-    private static final Logger logger = LoggerFactory.getLogger(OutboxRelayService.class);
 
-    private final OutboxRepository outboxRepository;
-    private final OrderEventPublisher orderEventPublisher;
+	private static final Logger logger = LoggerFactory.getLogger(OutboxRelayService.class);
 
-    @Value("${outbox.batch-size:10}")
-    private int batchSize;
+	private final OutboxRepository outboxRepository;
 
-    public OutboxRelayService(OutboxRepository outboxRepository, OrderEventPublisher orderEventPublisher) {
-        this.outboxRepository = outboxRepository;
-        this.orderEventPublisher = orderEventPublisher;
-    }
+	private final OrderEventPublisher orderEventPublisher;
 
-    @Scheduled(fixedDelay = 2000)
-    @Transactional
-    public void processOutboxEvents() {
-        List<Outbox> events = outboxRepository.findByStatusOrderByCreatedAtAsc(
-                Outbox.EventStatus.PENDING,
-                PageRequest.of(0, batchSize)
-        );
+	@Value("${outbox.batch-size:10}")
+	private int batchSize;
 
-        if (events.isEmpty()) {
-            return;
-        }
-        logger.info("Found {} pending outbox events. Processing...", events.size());
+	public OutboxRelayService(OutboxRepository outboxRepository, OrderEventPublisher orderEventPublisher) {
+		this.outboxRepository = outboxRepository;
+		this.orderEventPublisher = orderEventPublisher;
+	}
 
-        for (Outbox event: events) {
-            try{
-                logger.info("Publishing event ID: {}", event.getId());
-                orderEventPublisher.publishOrderCreatedEvent(event.getPayload());
-                event.setStatus(Outbox.EventStatus.SENT);
-            }
-			catch (Exception e) {
-                logger.error("Failed to process outbox event ID: {}", event.getId(), e);
-                event.setStatus(Outbox.EventStatus.FAILED);
+	@Scheduled(fixedDelay = 2000)
+	@Transactional
+	public void processOutboxEvents() {
+		List<Outbox> events = outboxRepository.findByStatusOrderByCreatedAtAsc(Outbox.EventStatus.PENDING,
+				PageRequest.of(0, batchSize));
+
+		if (events.isEmpty()) {
+			return;
+		}
+		logger.info("Found {} pending outbox events. Processing...", events.size());
+
+		for (Outbox event : events) {
+			try {
+				logger.info("Publishing event ID: {}", event.getId());
+				orderEventPublisher.publishOrderCreatedEvent(event.getPayload());
+				event.setStatus(Outbox.EventStatus.SENT);
 			}
-        }
-    }
+			catch (Exception e) {
+				logger.error("Failed to process outbox event ID: {}", event.getId(), e);
+				event.setStatus(Outbox.EventStatus.FAILED);
+			}
+		}
+	}
 
 }

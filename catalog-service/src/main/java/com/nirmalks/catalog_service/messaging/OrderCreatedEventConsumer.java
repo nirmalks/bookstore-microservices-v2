@@ -12,26 +12,32 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class OrderCreatedEventConsumer {
-    private final Logger logger = LoggerFactory.getLogger(OrderCreatedEventConsumer.class);
-    private BookService bookService;
 
-    private final InventoryEventPublisher eventPublisher;
+	private final Logger logger = LoggerFactory.getLogger(OrderCreatedEventConsumer.class);
 
-    OrderCreatedEventConsumer(BookService bookService, InventoryEventPublisher eventPublisher) {
-        this.bookService = bookService;
-        this.eventPublisher = eventPublisher;
-    }
-    @RabbitListener(queues = RabbitMqConfig.QUEUE_INVENTORY)
-    public void consumeOrderCreatedEvent(OrderMessage message, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
-        logger.info("Received order event to update inventory: {}", message);
-        try {
-            bookService.updateStock(message);
-            eventPublisher.publishStockReservedEvent(message.orderId());
-            logger.info("Successfully processed order: {}", message.orderId());
-        } catch (Exception e) {
-            logger.info("failed to process order: {}", message.orderId());
-            eventPublisher.publishStockFailedEvent(message.orderId(), e.getMessage());
-        }
+	private BookService bookService;
 
-    }
+	private final InventoryEventPublisher eventPublisher;
+
+	OrderCreatedEventConsumer(BookService bookService, InventoryEventPublisher eventPublisher) {
+		this.bookService = bookService;
+		this.eventPublisher = eventPublisher;
+	}
+
+	@RabbitListener(queues = RabbitMqConfig.QUEUE_INVENTORY)
+	public void consumeOrderCreatedEvent(OrderMessage message, Channel channel,
+			@Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
+		logger.info("Received order event to update inventory: {}", message);
+		try {
+			bookService.updateStock(message);
+			eventPublisher.publishStockReservedEvent(message.orderId());
+			logger.info("Successfully processed order: {}", message.orderId());
+		}
+		catch (Exception e) {
+			logger.info("failed to process order: {}", message.orderId());
+			eventPublisher.publishStockFailedEvent(message.orderId(), e.getMessage());
+		}
+
+	}
+
 }

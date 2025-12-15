@@ -16,28 +16,32 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 public class JwtHeaderAuthenticationFilter extends OncePerRequestFilter {
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getRequestURI().startsWith("/api/internal/")|| request.getRequestURI().startsWith("/v3/api-docs") ||
-                request.getRequestURI().startsWith("/swagger-ui/**");
-    }
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-        String userId = request.getHeader("X-User-ID");
-        String userRolesHeader = request.getHeader("X-User-Roles");
 
-        if (userId != null && !userId.isEmpty() && userRolesHeader != null && !userRolesHeader.isEmpty()) {
+	@Override
+	protected boolean shouldNotFilter(HttpServletRequest request) {
+		return request.getRequestURI().startsWith("/api/internal/")
+				|| request.getRequestURI().startsWith("/v3/api-docs")
+				|| request.getRequestURI().startsWith("/swagger-ui/**");
+	}
 
-            Collection<? extends GrantedAuthority> authorities = Arrays.stream(userRolesHeader.split(","))
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
+		String userId = request.getHeader("X-User-ID");
+		String userRolesHeader = request.getHeader("X-User-Roles");
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userId, null, authorities);
+		if (userId != null && !userId.isEmpty() && userRolesHeader != null && !userRolesHeader.isEmpty()) {
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
-        filterChain.doFilter(request, response);
-    }
+			Collection<? extends GrantedAuthority> authorities = Arrays.stream(userRolesHeader.split(","))
+				.map(SimpleGrantedAuthority::new)
+				.collect(Collectors.toList());
+
+			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userId, null,
+					authorities);
+
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+		}
+		filterChain.doFilter(request, response);
+	}
+
 }

@@ -1,4 +1,5 @@
 package com.nirmalks.bookstore.auth_server.security;
+
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -43,137 +44,139 @@ import java.util.stream.Collectors;
 
 @Configuration
 public class SecurityConfig {
-    private final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
-    @Bean
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http,
-                                                          PasswordAuthenticationProvider passwordAuthProvider,
-                                                          PasswordAuthenticationConverter passwordAuthenticationConverter) throws Exception {
-        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
-        authorizationServerConfigurer.tokenEndpoint(tokenEndpoint ->
-                tokenEndpoint
-                        .accessTokenRequestConverter(passwordAuthenticationConverter)
-                        .authenticationProvider(passwordAuthProvider)
-                        .accessTokenResponseHandler(new CustomAccessTokenResponseHandler())
-        );
 
+	private final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
-        http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
-                .authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/oauth2/token").permitAll())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/oauth2/token"))
-                .with(authorizationServerConfigurer, customizer -> {});
+	@Bean
+	public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http,
+			PasswordAuthenticationProvider passwordAuthProvider,
+			PasswordAuthenticationConverter passwordAuthenticationConverter) throws Exception {
+		OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
+		authorizationServerConfigurer
+			.tokenEndpoint(tokenEndpoint -> tokenEndpoint.accessTokenRequestConverter(passwordAuthenticationConverter)
+				.authenticationProvider(passwordAuthProvider)
+				.accessTokenResponseHandler(new CustomAccessTokenResponseHandler()));
 
-        return http.build();
-    }
+		http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
+			.authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/oauth2/token").permitAll())
+			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.csrf(csrf -> csrf.ignoringRequestMatchers("/api/oauth2/token"))
+			.with(authorizationServerConfigurer, customizer -> {
+			});
 
-    @Bean
-    public AuthenticationManager authenticationManager(PasswordAuthenticationProvider provider) {
-        return new ProviderManager(provider);
-    }
+		return http.build();
+	}
 
-    @Bean
-    public PasswordAuthenticationProvider passwordAuthenticationProvider(WebClient webClient, OAuth2AuthorizationService authorizationService,
-                                                                         OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator) {
-        return new PasswordAuthenticationProvider(authorizationService, tokenGenerator, webClient);
-    }
+	@Bean
+	public AuthenticationManager authenticationManager(PasswordAuthenticationProvider provider) {
+		return new ProviderManager(provider);
+	}
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+	@Bean
+	public PasswordAuthenticationProvider passwordAuthenticationProvider(WebClient webClient,
+			OAuth2AuthorizationService authorizationService,
+			OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator) {
+		return new PasswordAuthenticationProvider(authorizationService, tokenGenerator, webClient);
+	}
 
-    @Bean
-    public RegisteredClientRepository registeredClientRepository() {
-        RegisteredClient client = RegisteredClient.withId("local-client-id")
-                .clientId("local-client")
-                .clientSecret(passwordEncoder().encode("secret"))
-                .authorizationGrantType(new AuthorizationGrantType("password"))
-                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                .scope("read")
-                .tokenSettings(TokenSettings.builder()
-                        .accessTokenTimeToLive(Duration.ofHours(1))
-                        .refreshTokenTimeToLive(Duration.ofDays(30))
-                        .build())
-                .build();
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
 
-        RegisteredClient internalClient = RegisteredClient.withId("auth-server-client-id")
-                .clientId("auth-server-client")
-                .clientSecret(passwordEncoder().encode("auth-server-secret"))
-                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-                .scope("internal_api")
-                .build();
-        return new InMemoryRegisteredClientRepository(client, internalClient);
-    }
+	@Bean
+	public RegisteredClientRepository registeredClientRepository() {
+		RegisteredClient client = RegisteredClient.withId("local-client-id")
+			.clientId("local-client")
+			.clientSecret(passwordEncoder().encode("secret"))
+			.authorizationGrantType(new AuthorizationGrantType("password"))
+			.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+			.scope("read")
+			.tokenSettings(TokenSettings.builder()
+				.accessTokenTimeToLive(Duration.ofHours(1))
+				.refreshTokenTimeToLive(Duration.ofDays(30))
+				.build())
+			.build();
 
-    @Bean
-    public PasswordAuthenticationConverter passwordAuthenticationConverter(
-            RegisteredClientRepository registeredClientRepository) {
-        return new PasswordAuthenticationConverter(registeredClientRepository);
-    }
-    @Bean
-    public OAuth2AuthorizationService authorizationService(RegisteredClientRepository registeredClientRepository) {
-        return new InMemoryOAuth2AuthorizationService();
-    }
-    @Bean
-    public OAuth2TokenGenerator<?> tokenGenerator(JwtEncoder jwtEncoder, OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer) {
-        JwtGenerator jwtGenerator = new JwtGenerator(jwtEncoder);
-        jwtGenerator.setJwtCustomizer(jwtCustomizer);
-        return new DelegatingOAuth2TokenGenerator(
-                jwtGenerator,
-                new OAuth2AccessTokenGenerator(),
-                new OAuth2RefreshTokenGenerator()
-        );
-    }
+		RegisteredClient internalClient = RegisteredClient.withId("auth-server-client-id")
+			.clientId("auth-server-client")
+			.clientSecret(passwordEncoder().encode("auth-server-secret"))
+			.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+			.authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+			.scope("internal_api")
+			.build();
+		return new InMemoryRegisteredClientRepository(client, internalClient);
+	}
 
-    @Bean
-    public JWKSource<SecurityContext> jwkSource() {
-        RSAKey rsaKey = Jwks.generateRsa();
-        JWKSet jwkSet = new JWKSet(rsaKey);
-        return new ImmutableJWKSet<>(jwkSet);
-    }
+	@Bean
+	public PasswordAuthenticationConverter passwordAuthenticationConverter(
+			RegisteredClientRepository registeredClientRepository) {
+		return new PasswordAuthenticationConverter(registeredClientRepository);
+	}
 
-    @Bean
-    public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
-        return new NimbusJwtEncoder(jwkSource);
-    }
+	@Bean
+	public OAuth2AuthorizationService authorizationService(RegisteredClientRepository registeredClientRepository) {
+		return new InMemoryOAuth2AuthorizationService();
+	}
 
-    @Bean
-    public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
-        return context -> {
-            if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
-                Authentication principal = context.getPrincipal();
-                if (principal instanceof UsernamePasswordAuthenticationToken) {
-                    CustomUserDetails userDetails = (CustomUserDetails) principal.getPrincipal();
+	@Bean
+	public OAuth2TokenGenerator<?> tokenGenerator(JwtEncoder jwtEncoder,
+			OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer) {
+		JwtGenerator jwtGenerator = new JwtGenerator(jwtEncoder);
+		jwtGenerator.setJwtCustomizer(jwtCustomizer);
+		return new DelegatingOAuth2TokenGenerator(jwtGenerator, new OAuth2AccessTokenGenerator(),
+				new OAuth2RefreshTokenGenerator());
+	}
 
-                    Long userId = userDetails.getId();
-                    String username = userDetails.getUsername();
-                    if (userId != null && username != null) {
-                        context.getClaims().subject(userId.toString());
-                        context.getClaims().claim("username", username);
+	@Bean
+	public JWKSource<SecurityContext> jwkSource() {
+		RSAKey rsaKey = Jwks.generateRsa();
+		JWKSet jwkSet = new JWKSet(rsaKey);
+		return new ImmutableJWKSet<>(jwkSet);
+	}
 
-                        List<String> roles = userDetails.getAuthorities().stream()
-                                .map(GrantedAuthority::getAuthority)
-                                .collect(Collectors.toList());
-                        context.getClaims().claim("roles", roles);
-                    } else {
-                        logger.error("Cannot create JWT: userId or username is null for authenticated user");
-                    }
-                }
-                // Case for internal client authentication (client credentials grant)
-                else if (principal instanceof OAuth2ClientAuthenticationToken) {
-                    String clientId = principal.getName();
-                    context.getClaims().claim("client_id", clientId);
-                    Set<String> scopes = context.getRegisteredClient().getScopes();
-                }
-            }
-        };
-    }
+	@Bean
+	public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
+		return new NimbusJwtEncoder(jwkSource);
+	}
 
-    @Bean
-    public AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder()
-                .tokenEndpoint("/api" + "/oauth2/token")
-                .build();
-    }
+	@Bean
+	public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
+		return context -> {
+			if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
+				Authentication principal = context.getPrincipal();
+				if (principal instanceof UsernamePasswordAuthenticationToken) {
+					CustomUserDetails userDetails = (CustomUserDetails) principal.getPrincipal();
+
+					Long userId = userDetails.getId();
+					String username = userDetails.getUsername();
+					if (userId != null && username != null) {
+						context.getClaims().subject(userId.toString());
+						context.getClaims().claim("username", username);
+
+						List<String> roles = userDetails.getAuthorities()
+							.stream()
+							.map(GrantedAuthority::getAuthority)
+							.collect(Collectors.toList());
+						context.getClaims().claim("roles", roles);
+					}
+					else {
+						logger.error("Cannot create JWT: userId or username is null for authenticated user");
+					}
+				}
+				// Case for internal client authentication (client credentials grant)
+				else if (principal instanceof OAuth2ClientAuthenticationToken) {
+					String clientId = principal.getName();
+					context.getClaims().claim("client_id", clientId);
+					Set<String> scopes = context.getRegisteredClient().getScopes();
+				}
+			}
+		};
+	}
+
+	@Bean
+	public AuthorizationServerSettings authorizationServerSettings() {
+		return AuthorizationServerSettings.builder().tokenEndpoint("/api" + "/oauth2/token").build();
+	}
+
 }
