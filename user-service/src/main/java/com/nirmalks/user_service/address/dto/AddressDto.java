@@ -1,4 +1,4 @@
-package dto;
+package com.nirmalks.user_service.address.dto;
 
 public class AddressDto {
 

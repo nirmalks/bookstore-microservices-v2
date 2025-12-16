@@ -9,8 +9,6 @@ import com.nirmalks.checkout_service.order.api.OrderResponse;
 import com.nirmalks.checkout_service.order.entity.Order;
 import com.nirmalks.checkout_service.order.entity.OrderItem;
 import com.nirmalks.checkout_service.order.entity.OrderStatus;
-import dto.AddressDto;
-import dto.AddressRequest;
 
 import java.time.LocalDateTime;
 

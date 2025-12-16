@@ -1,6 +1,6 @@
 package com.nirmalks.checkout_service.order.api;
 
-import dto.AddressRequest;
+import com.nirmalks.checkout_service.order.dto.AddressRequest;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;

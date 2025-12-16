@@ -1,6 +1,6 @@
 package com.nirmalks.checkout_service.order.dto;
 
-import dto.AddressDto;
+import com.nirmalks.checkout_service.order.dto.AddressDto;
 
 import java.time.LocalDateTime;
 import java.util.List;

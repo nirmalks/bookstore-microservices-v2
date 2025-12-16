@@ -1,7 +1,7 @@
 package com.nirmalks.bookstore.auth_server.security;
 
-import dto.LoginRequest;
-import dto.UserDto;
+import com.nirmalks.bookstore.auth_server.dto.LoginRequest;
+import com.nirmalks.bookstore.auth_server.dto.UserDtoInternal;
 import dto.UserRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,13 +63,13 @@ public class PasswordAuthenticationProvider implements AuthenticationProvider {
 			loginRequest.setUsername(username);
 			loginRequest.setPassword(password);
 
-			UserDto userDto = webClient.post()
+			UserDtoInternal userDto = webClient.post()
 				.uri("/api/internal/users/auth")
 				.attributes(ServerOAuth2AuthorizedClientExchangeFilterFunction
 					.clientRegistrationId("auth-server-client-id"))
 				.bodyValue(loginRequest)
 				.retrieve()
-				.bodyToMono(UserDto.class)
+				.bodyToMono(UserDtoInternal.class)
 				.block();
 			if (userDto == null || userDto.getId() == null || userDto.getUsername() == null) {
 				throw new BadCredentialsException("User authentication failed: Incomplete user data.");

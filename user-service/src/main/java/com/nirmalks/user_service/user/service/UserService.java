@@ -5,6 +5,9 @@ import com.nirmalks.user_service.user.api.CreateUserRequest;
 import com.nirmalks.user_service.user.api.UpdateUserRequest;
 import com.nirmalks.user_service.user.api.UserResponse;
 import com.nirmalks.user_service.user.entity.User;
+import com.nirmalks.user_service.address.dto.AddressDto;
+import com.nirmalks.user_service.address.dto.AddressRequestWithUserId;
+import com.nirmalks.user_service.user.dto.UserDtoInternal;
 import dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -26,7 +29,7 @@ public interface UserService {
 
 	AddressDto updateAddress(AddressRequestWithUserId addressRequest);
 
-	UserDto internalAuthenticate(String username, String password);
+	UserDtoInternal internalAuthenticate(String username, String password);
 
 	User findByUsername(String username);
 

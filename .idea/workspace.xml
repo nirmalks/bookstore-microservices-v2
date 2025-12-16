@@ -5,8 +5,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a0fba06-e566-4729-86db-4c73a9ef2d55" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/dto/LoginRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/dto/UserDtoInternal.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/dto/AddressDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/dto/AddressRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/address/dto/AddressDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/address/dto/AddressRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/address/dto/AddressRequestWithUserId.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/user/dto/UserDtoInternal.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/security/CustomUserDetailsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/security/CustomUserDetailsService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/security/PasswordAuthenticationProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-server/src/main/java/com/nirmalks/bookstore/auth_server/security/PasswordAuthenticationProvider.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/api/DirectOrderRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/api/DirectOrderRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/api/OrderFromCartRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/api/OrderFromCartRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/dto/OrderMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/dto/OrderMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/dto/OrderSummaryDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/checkout-service/src/main/java/com/nirmalks/checkout_service/order/dto/OrderSummaryDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shared-utils/src/main/java/dto/AddressDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/shared-utils/src/main/java/dto/AddressRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/shared-utils/src/main/java/dto/AddressRequestWithUserId.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/shared-utils/src/main/java/dto/LoginRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/shared-utils/src/main/java/dto/UserDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/address/mapper/AddressMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/address/mapper/AddressMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/user/controller/InternalUsersController.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/user/controller/InternalUsersController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/user/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/user/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/user/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/user/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/user/service/impl/UserServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/com/nirmalks/user_service/user/service/impl/UserServiceImpl.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

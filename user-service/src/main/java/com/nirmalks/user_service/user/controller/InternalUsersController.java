@@ -2,7 +2,7 @@ package com.nirmalks.user_service.user.controller;
 
 import com.nirmalks.user_service.auth.api.LoginRequest;
 import com.nirmalks.user_service.user.service.UserService;
-import dto.UserDto;
+import com.nirmalks.user_service.user.dto.UserDtoInternal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,11 +27,12 @@ public class InternalUsersController {
 	}
 
 	@PostMapping("/auth")
-	public ResponseEntity<UserDto> internalAuth(@RequestBody LoginRequest loginRequest) {
+	public ResponseEntity<UserDtoInternal> internalAuth(@RequestBody LoginRequest loginRequest) {
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 		if (authentication.isAuthenticated()) {
-			UserDto user = userService.internalAuthenticate(loginRequest.getUsername(), loginRequest.getPassword());
+			UserDtoInternal user = userService.internalAuthenticate(loginRequest.getUsername(),
+					loginRequest.getPassword());
 			return ResponseEntity.ok(user);
 		}
 		throw new BadCredentialsException("Invalid credentials");

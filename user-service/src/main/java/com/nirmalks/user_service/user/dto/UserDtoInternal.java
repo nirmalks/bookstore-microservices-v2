@@ -1,6 +1,8 @@
-package dto;
+package com.nirmalks.user_service.user.dto;
 
-public class UserDto {
+import dto.UserRole;
+
+public class UserDtoInternal {
 
 	private Long id;
 

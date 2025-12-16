@@ -1,8 +1,8 @@
 package com.nirmalks.user_service.address.mapper;
 
 import com.nirmalks.user_service.address.Address;
-import dto.AddressDto;
-import dto.AddressRequestWithUserId;
+import com.nirmalks.user_service.address.dto.AddressDto;
+import com.nirmalks.user_service.address.dto.AddressRequestWithUserId;
 
 public class AddressMapper {
 

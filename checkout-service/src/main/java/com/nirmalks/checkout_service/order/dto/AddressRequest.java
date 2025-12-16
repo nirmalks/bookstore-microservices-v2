@@ -1,4 +1,4 @@
-package dto;
+package com.nirmalks.checkout_service.order.dto;
 
 public class AddressRequest {
 

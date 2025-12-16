@@ -1,6 +1,6 @@
 package com.nirmalks.bookstore.auth_server.security;
 
-import dto.UserDto;
+import com.nirmalks.bookstore.auth_server.dto.UserDtoInternal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,14 +29,14 @@ public class CustomUserDetailsService implements UserDetailsService {
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		String url = userServiceBaseUrl + "/api/internal/users/by-username/{username}";
-		Optional<UserDto> userDtoOptional = webClient.get()
+		Optional<UserDtoInternal> userDtoOptional = webClient.get()
 			.uri(url, username)
 			.retrieve()
-			.bodyToMono(UserDto.class)
+			.bodyToMono(UserDtoInternal.class)
 			.onErrorResume(e -> Mono.empty())
 			.blockOptional();
 
-		UserDto userDto = userDtoOptional
+		UserDtoInternal userDto = userDtoOptional
 			.orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 		GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + userDto.getRole().name());
 		return new CustomUserDetails(userDto.getId(), userDto.getUsername(), userDto.getHashedPassword(),
