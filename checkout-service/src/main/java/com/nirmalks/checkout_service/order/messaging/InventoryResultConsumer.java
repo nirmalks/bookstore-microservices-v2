@@ -2,7 +2,6 @@ package com.nirmalks.checkout_service.order.messaging;
 
 import com.nirmalks.checkout_service.config.RabbitMqConfig;
 import com.nirmalks.checkout_service.order.entity.OrderStatus;
-import com.nirmalks.checkout_service.order.repository.OrderRepository;
 import com.nirmalks.checkout_service.order.service.OrderService;
 import dto.StockReservationFailedEvent;
 import dto.StockReservationSuccessEvent;

@@ -23,7 +23,7 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.authorizeHttpRequests(auth -> auth.requestMatchers("/actuator/**")
+		http.authorizeHttpRequests(auth -> auth.requestMatchers("/actuator/**", "/actuator")
 			.permitAll()
 			.requestMatchers(HttpMethod.GET, "/api/books/**", "/api/books", "/api/genres")
 			.permitAll()

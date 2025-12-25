@@ -5,6 +5,7 @@ import com.nirmalks.checkout_service.cart.entity.CartItem;
 import com.nirmalks.checkout_service.cart.repository.CartRepository;
 import com.nirmalks.checkout_service.common.BookDto;
 import com.nirmalks.checkout_service.common.UserDto;
+import com.nirmalks.checkout_service.metrics.OrderMetrics;
 import com.nirmalks.checkout_service.order.api.DirectOrderRequest;
 import com.nirmalks.checkout_service.order.api.OrderFromCartRequest;
 import com.nirmalks.checkout_service.order.api.OrderResponse;
@@ -19,6 +20,7 @@ import com.nirmalks.checkout_service.order.messaging.OrderEventPublisher;
 import com.nirmalks.checkout_service.order.service.OrderService;
 import com.nirmalks.checkout_service.order.service.OutboxService;
 import common.RequestUtils;
+import io.micrometer.core.instrument.Timer;
 import dto.OrderItemPayload;
 import dto.OrderMessage;
 import dto.PageRequestDto;
@@ -63,49 +65,68 @@ public class OrderServiceImpl implements OrderService {
 
 	private final OutboxService outboxService;
 
+	private final OrderMetrics orderMetrics;
+
 	@Autowired
 	public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
 			CartRepository cartRepository, @Qualifier("catalogServiceWebClient") WebClient catalogServiceWebClient,
-			@Qualifier("userServiceWebClient") WebClient userServiceWebClient, OutboxService outboxService) {
+			@Qualifier("userServiceWebClient") WebClient userServiceWebClient, OutboxService outboxService,
+			OrderMetrics orderMetrics) {
 		this.orderRepository = orderRepository;
 		this.orderItemRepository = orderItemRepository;
 		this.cartRepository = cartRepository;
 		this.catalogServiceWebClient = catalogServiceWebClient;
 		this.userServiceWebClient = userServiceWebClient;
 		this.outboxService = outboxService;
+		this.orderMetrics = orderMetrics;
 	}
 
 	@Override
 	@Transactional
 	public OrderResponse createOrder(DirectOrderRequest directOrderRequest) {
-		var user = getUserDtoFromUserService(directOrderRequest.getUserId()).block();
+		Timer.Sample sample = orderMetrics.startOrderCreationTimer();
+		try {
+			var user = getUserDtoFromUserService(directOrderRequest.getUserId()).block();
 
-		var itemDtos = directOrderRequest.getItems();
-		var order = OrderMapper.toOrderEntity(user, directOrderRequest.getAddress());
+			var itemDtos = directOrderRequest.getItems();
+			var order = OrderMapper.toOrderEntity(user, directOrderRequest.getAddress());
 
-		ExecutorService executor = Executors.newFixedThreadPool(8);
-		List<CompletableFuture<OrderItem>> orderItemFutures = itemDtos.stream()
-			.map(itemDto -> CompletableFuture.supplyAsync(() -> {
-				var book = getBookDtoFromCatalogService(itemDto.getBookId()).block();
-				return OrderMapper.toOrderItemEntity(book, itemDto, order);
-			}, executor))
-			.toList();
-		List<OrderItem> orderItems = orderItemFutures.stream().map(CompletableFuture::join).toList();
-		executor.shutdown();
-		order.setItems(orderItems);
-		order.setTotalCost(order.calculateTotalCost());
-		var savedOrder = orderRepository.save(order);
-		orderItemRepository.saveAll(orderItems);
+			ExecutorService executor = Executors.newFixedThreadPool(8);
+			List<CompletableFuture<OrderItem>> orderItemFutures = itemDtos.stream()
+				.map(itemDto -> CompletableFuture.supplyAsync(() -> {
+					var book = getBookDtoFromCatalogService(itemDto.getBookId()).block();
+					return OrderMapper.toOrderItemEntity(book, itemDto, order);
+				}, executor))
+				.toList();
+			List<OrderItem> orderItems = orderItemFutures.stream().map(CompletableFuture::join).toList();
+			executor.shutdown();
+			order.setItems(orderItems);
+			order.setTotalCost(order.calculateTotalCost());
+			var savedOrder = orderRepository.save(order);
+			orderItemRepository.saveAll(orderItems);
 
-		List<OrderItemPayload> itemPayloads = orderItems.stream()
-			.map(item -> new OrderItemPayload(item.getBookId(), item.getQuantity()))
-			.toList();
+			List<OrderItemPayload> itemPayloads = orderItems.stream()
+				.map(item -> new OrderItemPayload(item.getBookId(), item.getQuantity()))
+				.toList();
 
-		OrderMessage message = new OrderMessage(savedOrder.getId().toString(), user.getId(), user.getEmail(),
-				savedOrder.getTotalCost(), savedOrder.getPlacedDate(), itemPayloads);
-		outboxService.saveOrderCreatedEvent(savedOrder.getId().toString(), message);
+			OrderMessage message = new OrderMessage(savedOrder.getId().toString(), user.getId(), user.getEmail(),
+					savedOrder.getTotalCost(), savedOrder.getPlacedDate(), itemPayloads);
+			outboxService.saveOrderCreatedEvent(savedOrder.getId().toString(), message);
 
-		return OrderMapper.toResponse(user, savedOrder, "Order placed successfully.");
+			// Record metrics
+			orderMetrics.incrementOrdersCreated();
+			orderMetrics.recordOrderByStatus(savedOrder.getOrderStatus().name());
+			orderMetrics.recordRevenue(savedOrder.getTotalCost());
+
+			return OrderMapper.toResponse(user, savedOrder, "Order placed successfully.");
+		}
+		catch (Exception e) {
+			orderMetrics.incrementOrdersFailed();
+			throw e;
+		}
+		finally {
+			orderMetrics.stopOrderCreationTimer(sample);
+		}
 	}
 
 	@Override

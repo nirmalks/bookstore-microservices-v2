@@ -150,8 +150,9 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<image>
-						<builder>paketobuildpacks/builder-jammy-base</builder>
-					</image>
+					<builder>paketobuildpacks/builder-jammy-base</builder>
+					<name>auth-server:${project.version}</name>
+				</image>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>

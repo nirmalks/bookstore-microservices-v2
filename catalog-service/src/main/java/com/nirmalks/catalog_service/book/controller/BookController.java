@@ -18,9 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 
@@ -104,22 +102,7 @@ public class BookController {
 	@ApiResponses(
 			value = { @ApiResponse(responseCode = "200", description = "List of books by author returned successfully"),
 					@ApiResponse(responseCode = "404", description = "Author not found") })
-	public Page<BookDto> getBookByAuthor(@PathVariable Long id, @PathVariable String name, // This
-																							// 'name'
-																							// path
-																							// variable
-																							// seems
-																							// unused
-																							// in
-																							// the
-																							// method
-																							// body.
-																							// Consider
-																							// removing
-																							// if
-																							// not
-																							// needed.
-			PageRequestDto pageRequestDto) {
+	public Page<BookDto> getBookByAuthor(@PathVariable Long id, PageRequestDto pageRequestDto) {
 		return bookService.getBooksByAuthor(id, pageRequestDto);
 	}
 

@@ -182,6 +182,7 @@
 				<configuration>
 					<image>
 						<builder>paketobuildpacks/builder-jammy-base</builder>
+						<name>checkout-service:${project.version}</name>
 					</image>
 				</configuration>
 			</plugin>

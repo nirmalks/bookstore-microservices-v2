@@ -8,11 +8,13 @@ import com.nirmalks.catalog_service.book.dto.BookMapper;
 import com.nirmalks.catalog_service.book.entity.Book;
 import com.nirmalks.catalog_service.book.repository.BookRepository;
 import com.nirmalks.catalog_service.genre.service.GenreService;
+import com.nirmalks.catalog_service.metrics.BookMetrics;
 import common.RequestUtils;
 import common.RestPage;
 import dto.OrderMessage;
 import dto.PageRequestDto;
 import exceptions.ResourceNotFoundException;
+import io.micrometer.core.instrument.Timer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -38,16 +40,26 @@ public class BookServiceImpl implements BookService {
 	@Autowired
 	private GenreService genreService;
 
+	@Autowired
+	private BookMetrics bookMetrics;
+
 	@Override
 	@Cacheable(value = "books", key = "#pageRequestDto.page")
 	public RestPage<BookDto> getAllBooks(PageRequestDto pageRequestDto) {
-		Pageable pageable = RequestUtils.getPageable(pageRequestDto);
-		return new RestPage<>(bookRepository.findAll(pageable).map(BookMapper::toDTO));
+		Timer.Sample sample = bookMetrics.startBookQueryTimer();
+		try {
+			Pageable pageable = RequestUtils.getPageable(pageRequestDto);
+			return new RestPage<>(bookRepository.findAll(pageable).map(BookMapper::toDTO));
+		}
+		finally {
+			bookMetrics.stopBookQueryTimer(sample);
+		}
 	}
 
 	@Override
 	@Cacheable(value = "book", key = "#id")
 	public BookDto getBookById(Long id) {
+		bookMetrics.incrementBookViews();
 		return bookRepository.findById(id)
 			.map(BookMapper::toDTO)
 			.orElseThrow(() -> new ResourceNotFoundException("Book not found"));
@@ -100,6 +112,11 @@ public class BookServiceImpl implements BookService {
 			.orElseThrow(() -> new ResourceNotFoundException("Book not found with ID: " + bookId));
 		book.setStock(quantity);
 		bookRepository.save(book);
+
+		// Alert if stock is low (threshold: 10)
+		if (quantity < 10) {
+			bookMetrics.recordLowStockAlert(bookId, quantity);
+		}
 	}
 
 	@Override
@@ -120,8 +137,18 @@ public class BookServiceImpl implements BookService {
 			int rowsUpdated = bookRepository.decrementStock(item.bookId(), item.quantity());
 
 			if (rowsUpdated == 0) {
+				bookMetrics.incrementStockReservationFailure();
 				throw new RuntimeException("Stock update failed for Book ID: " + item.bookId());
 			}
+
+			bookMetrics.incrementStockReservationSuccess();
+
+			// Check if stock is low after decrement
+			bookRepository.findById(item.bookId()).ifPresent(book -> {
+				if (book.getStock() < 10) {
+					bookMetrics.recordLowStockAlert(item.bookId(), book.getStock());
+				}
+			});
 		});
 	}
 

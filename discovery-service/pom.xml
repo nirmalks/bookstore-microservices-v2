@@ -73,8 +73,9 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<image>
-						<builder>paketobuildpacks/builder-jammy-base</builder>
-					</image>
+					<builder>paketobuildpacks/builder-jammy-base</builder>
+					<name>discovery-service:${project.version}</name>
+				</image>
 				</configuration>
 			</plugin>
 			<plugin>

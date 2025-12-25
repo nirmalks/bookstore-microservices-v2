@@ -111,6 +111,7 @@
                 <configuration>
                     <image>
                         <builder>paketobuildpacks/builder-jammy-base</builder>
+                        <name>notification-service:${project.version}</name>
                     </image>
                     <pullPolicy>IF_NOT_PRESENT</pullPolicy>
                 </configuration>

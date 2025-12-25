@@ -11,7 +11,7 @@ services:
     volumes:
       - user-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d bookstore_user_service_db"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d bookstore_user_service_db" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -27,7 +27,7 @@ services:
     volumes:
       - catalog-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d bookstore_catalog_service_db"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d bookstore_catalog_service_db" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -43,7 +43,7 @@ services:
     volumes:
       - checkout-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d bookstore_checkout_service_db"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d bookstore_checkout_service_db" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -60,9 +60,19 @@ services:
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq/mnesia
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
       interval: 10s
       timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
       retries: 5
 
   # --- Microservices ---
@@ -71,7 +81,7 @@ services:
     ports:
       - "8761:8761"
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8761'"]
+      test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8761'" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -79,7 +89,8 @@ services:
 
   config-server:
     build:
-      context: ./config-server
+      context: .
+      dockerfile: config-server/Dockerfile
     image: config-server:0.0.1-SNAPSHOT
     ports:
       - "8888:8888"
@@ -87,7 +98,7 @@ services:
       discovery-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8888'"]
+      test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8888'" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -95,7 +106,8 @@ services:
 
   api-gateway:
     build:
-      context: ./api-gateway
+      context: .
+      dockerfile: api-gateway/Dockerfile
     image: api_gateway:0.0.1-SNAPSHOT
     ports:
       - "8080:8080"
@@ -110,7 +122,7 @@ services:
         condition: service_started
     restart: on-failure
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8080'"]
+      test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8080'" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -118,12 +130,15 @@ services:
 
   auth-server:
     build:
-      context: ./auth-server
+      context: .
+      dockerfile: auth-server/Dockerfile
     image: auth-server:0.0.1-SNAPSHOT
     ports:
       - "9001:9001"
     depends_on:
       discovery-service:
+        condition: service_healthy
+      config-server:
         condition: service_healthy
       user-db:
         condition: service_healthy
@@ -135,15 +150,16 @@ services:
       - SPRING_DATASOURCE_PASSWORD=admin123
     restart: on-failure
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/9001'"]
+      test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/9001'" ]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 20s
+      start_period: 45s
 
   catalog-service:
     build:
-      context: ./catalog-service
+      context: .
+      dockerfile: catalog-service/Dockerfile
     image: catalog-service:0.0.1-SNAPSHOT
     ports:
       - "8082:8082"
@@ -152,15 +168,23 @@ services:
         condition: service_healthy
       catalog-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       otel-collector:
         condition: service_started
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://catalog-db:5432/bookstore_catalog_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin123
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
     restart: on-failure
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8082'"]
+      test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8082'" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -168,12 +192,15 @@ services:
 
   user-service:
     build:
-      context: ./user-service
+      context: .
+      dockerfile: user-service/Dockerfile
     image: user-service:0.0.1-SNAPSHOT
     ports:
       - "8081:8081"
     depends_on:
       discovery-service:
+        condition: service_healthy
+      config-server:
         condition: service_healthy
       user-db:
         condition: service_healthy
@@ -185,15 +212,16 @@ services:
       - SPRING_DATASOURCE_PASSWORD=admin123
     restart: on-failure
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8081'"]
+      test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8081'" ]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 20s
+      start_period: 45s
 
   checkout-service:
     build:
-      context: ./checkout-service
+      context: .
+      dockerfile: checkout-service/Dockerfile
     image: checkout-service:0.0.1-SNAPSHOT
     ports:
       - "8083:8083"
@@ -210,14 +238,15 @@ services:
       - SPRING_DATASOURCE_PASSWORD=admin123
     restart: on-failure
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8083'"]
+      test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8083'" ]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 20s
   notification-service:
     build:
-      context: ./notification-service
+      context: .
+      dockerfile: notification-service/Dockerfile
     image: notification-service:0.0.1-SNAPSHOT
     ports:
       - "8084:8084"
@@ -249,7 +278,7 @@ services:
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
-    command: ["--config=/etc/otel-collector-config.yaml"]
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:

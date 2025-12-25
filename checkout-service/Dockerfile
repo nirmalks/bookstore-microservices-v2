@@ -1,5 +1,16 @@
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
+
+# Install Maven
+ARG MAVEN_VERSION=3.9.9
+RUN apt-get update && apt-get install -y wget && \
+    wget https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
+    tar -xzf apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
+    mv apache-maven-${MAVEN_VERSION} /opt/maven && \
+    rm apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+ENV PATH="/opt/maven/bin:${PATH}"
+
 COPY pom.xml .
 COPY catalog-service/pom.xml catalog-service/
 COPY checkout-service/pom.xml checkout-service/
@@ -9,6 +20,7 @@ COPY discovery-service/pom.xml discovery-service/
 COPY api-gateway/pom.xml api-gateway/
 COPY auth-server/pom.xml auth-server/
 COPY config-server/pom.xml config-server/
+COPY notification-service/pom.xml notification-service/
 
 COPY shared-utils/src shared-utils/src
 RUN mvn clean install -DskipTests -pl shared-utils -am
@@ -16,7 +28,7 @@ RUN mvn dependency:go-offline -B
 COPY . .
 RUN mvn clean package -DskipTests -pl checkout-service -am
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-noble
 WORKDIR /app
 ENV ARTIFACT_NAME=checkout-service
 COPY --from=build /app/${ARTIFACT_NAME}/target/*.jar app.jar

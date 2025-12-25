@@ -1,4 +1,4 @@
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+FROM maven:3.9.9-eclipse-temurin-25-noble AS build
 WORKDIR /app
 COPY pom.xml .
 COPY catalog-service/pom.xml catalog-service/
@@ -10,6 +10,7 @@ COPY api-gateway/pom.xml api-gateway/
 COPY auth-server/pom.xml auth-server/
 COPY shared-utils/src shared-utils/src
 COPY config-server/pom.xml config-server/
+COPY notification-service/pom.xml notification-service/
 
 RUN mvn clean install -DskipTests -pl shared-utils -am
 RUN mvn dependency:go-offline -B
@@ -17,7 +18,7 @@ COPY . .
 
 RUN mvn clean package -DskipTests -pl config-server -am
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-noble
 WORKDIR /app
 ENV ARTIFACT_NAME=config-server
 COPY --from=build /app/${ARTIFACT_NAME}/target/*.jar app.jar

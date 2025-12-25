@@ -69,6 +69,7 @@
 				<configuration>
 					<image>
 						<builder>paketobuildpacks/builder-jammy-base</builder>
+						<name>config-server:${project.version}</name>
 					</image>
 				</configuration>
 			</plugin>

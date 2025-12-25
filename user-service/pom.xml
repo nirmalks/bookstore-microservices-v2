@@ -156,8 +156,9 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<image>
-						<builder>paketobuildpacks/builder-jammy-base</builder>
-					</image>
+					<builder>paketobuildpacks/builder-jammy-base</builder>
+					<name>user-service:${project.version}</name>
+				</image>
 				</configuration>
 			</plugin>
 			<plugin>
