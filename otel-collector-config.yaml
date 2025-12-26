@@ -14,11 +14,7 @@ exporters:
     tls:
       insecure: true
 
-  # Prometheus Exporter (for METRICS scraping)
-  prometheus:
-    endpoint: "0.0.0.0:9090" # Collector exposes its own metrics for Prometheus to scrape
-
-  # Debug Exporter
+  # Debug Exporter (for troubleshooting)
   debug:
     verbosity: detailed
 
@@ -29,13 +25,9 @@ processors:
 service:
   pipelines:
     # --- TRACES PIPELINE: Receive OTLP -> Batch -> Export to Jaeger ---
+    # NOTE: Metrics are scraped directly by Prometheus from each service's 
+    #       /actuator/prometheus endpoint. No metrics pipeline here to avoid duplicates.
     traces:
       receivers: [otlp]
       processors: [batch]
       exporters: [otlp/jaeger, debug]
-
-    # --- METRICS PIPELINE: Receive OTLP -> Batch -> Export to Prometheus  ---
-    metrics:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [prometheus, debug]
