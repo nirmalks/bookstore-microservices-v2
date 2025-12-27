@@ -1,22 +1,254 @@
 groups:
+  # ============================================================================
+  # SERVICE HEALTH ALERTS
+  # Monitor uptime, memory, CPU for all microservices
+  # ============================================================================
   - name: service-health
     rules:
-      # Service Down
+      # --- Service Availability ---
       - alert: ServiceDown
         expr: up == 0
         for: 30s
         labels:
           severity: critical
         annotations:
-          summary: "Service {{ $labels.job }} is down"
-          description: "Prometheus cannot reach {{ $labels.instance }} for 30s"
+          summary: "🔴 Service {{ $labels.job }} is DOWN"
+          description: "{{ $labels.instance }} has been unreachable for 30 seconds."
+          runbook_url: "https://wiki.internal/runbooks/service-down"
 
-      # High latency - api-gateway
-      - alert: HighLatency
-        expr: http_server_requests_seconds_sum{job="api-gateway"} / http_server_requests_seconds_count{job="api-gateway"} > 0.5
-        for: 30s
+      - alert: ServiceFlapping
+        expr: changes(up[10m]) > 3
+        for: 1m
         labels:
           severity: warning
         annotations:
-          summary: "High latency detected on API Gateway"
-          description: "Average request latency > 500ms for 30s"
+          summary: "⚠️ Service {{ $labels.job }} is flapping"
+          description: "{{ $labels.instance }} has restarted more than 3 times in 10 minutes."
+
+      # --- JVM Memory ---
+      - alert: HighHeapMemoryUsage
+        expr: (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ High JVM heap usage on {{ $labels.job }}"
+          description: "Heap memory usage is {{ printf \"%.1f\" $value }}% on {{ $labels.instance }}."
+
+      - alert: CriticalHeapMemoryUsage
+        expr: (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "🔴 Critical JVM heap usage on {{ $labels.job }}"
+          description: "Heap memory at {{ printf \"%.1f\" $value }}% - OOM imminent!"
+
+      # --- CPU Usage ---
+      - alert: HighCPUUsage
+        expr: process_cpu_usage * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ High CPU usage on {{ $labels.job }}"
+          description: "CPU usage is {{ printf \"%.1f\" $value }}% on {{ $labels.instance }}."
+
+  # ============================================================================
+  # API SLO ALERTS
+  # Latency and error rate thresholds for SLA compliance
+  # ============================================================================
+  - name: api-slo
+    rules:
+      # --- Latency P99 ---
+      - alert: HighLatencyP99
+        expr: histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{status!~"5.."}[5m])) by (le, job, uri)) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ High P99 latency on {{ $labels.job }}"
+          description: "P99 latency for {{ $labels.uri }} is {{ printf \"%.2f\" $value }}s (threshold: 1s)."
+
+      - alert: CriticalLatencyP99
+        expr: histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{status!~"5.."}[5m])) by (le, job, uri)) > 3
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "🔴 Critical P99 latency on {{ $labels.job }}"
+          description: "P99 latency for {{ $labels.uri }} is {{ printf \"%.2f\" $value }}s - degraded experience!"
+
+      # --- Error Rate ---
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job)
+            /
+            sum(rate(http_server_requests_seconds_count[5m])) by (job)
+          ) * 100 > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ High error rate on {{ $labels.job }}"
+          description: "5xx error rate is {{ printf \"%.2f\" $value }}% (threshold: 1%)."
+
+      - alert: CriticalErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job)
+            /
+            sum(rate(http_server_requests_seconds_count[5m])) by (job)
+          ) * 100 > 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "🔴 Critical error rate on {{ $labels.job }}"
+          description: "5xx error rate is {{ printf \"%.2f\" $value }}% - major incident!"
+
+  # ============================================================================
+  # BUSINESS METRICS ALERTS
+  # Order processing, revenue, inventory (your custom metrics)
+  # ============================================================================
+  - name: business-metrics
+    rules:
+      # --- Order Failures ---
+      - alert: HighOrderFailureRate
+        expr: |
+          (
+            sum(rate(orders_failed_total[10m]))
+            /
+            (sum(rate(orders_created_total[10m])) + 0.001)
+          ) * 100 > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ High order failure rate"
+          description: "{{ printf \"%.1f\" $value }}% of orders are failing (threshold: 10%)."
+
+      - alert: CriticalOrderFailureRate
+        expr: |
+          (
+            sum(rate(orders_failed_total[10m]))
+            /
+            (sum(rate(orders_created_total[10m])) + 0.001)
+          ) * 100 > 25
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "🔴 Critical order failure rate"
+          description: "{{ printf \"%.1f\" $value }}% of orders are failing - revenue impact!"
+
+      # --- Stock Reservation Issues ---
+      - alert: HighStockReservationFailure
+        expr: |
+          (
+            sum(rate(stock_reservation_failure_total[10m]))
+            /
+            (sum(rate(stock_reservation_success_total[10m])) + sum(rate(stock_reservation_failure_total[10m])) + 0.001)
+          ) * 100 > 20
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ High stock reservation failures"
+          description: "{{ printf \"%.1f\" $value }}% of stock reservations are failing."
+
+      # --- No Orders (anomaly detection) ---
+      - alert: NoOrdersReceived
+        expr: sum(increase(orders_created_total[30m])) == 0
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ No orders received in 30 minutes"
+          description: "Zero orders created - possible system issue or traffic drop."
+
+  # ============================================================================
+  # DATABASE ALERTS
+  # Connection pool, query performance
+  # ============================================================================
+  - name: database
+    rules:
+      - alert: DatabaseConnectionPoolExhausted
+        expr: hikaricp_connections_active / hikaricp_connections_max > 0.9
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "🔴 Database connection pool exhausted on {{ $labels.job }}"
+          description: "{{ printf \"%.0f\" $value }}% of connections in use - queries will fail!"
+
+      - alert: DatabaseConnectionPoolLow
+        expr: hikaricp_connections_active / hikaricp_connections_max > 0.7
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ Database connection pool running low on {{ $labels.job }}"
+          description: "{{ printf \"%.0f\" $value }}% of connections in use."
+
+      - alert: SlowDatabaseQueries
+        expr: rate(jdbc_connections_seconds_sum[5m]) / rate(jdbc_connections_seconds_count[5m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ Slow database queries on {{ $labels.job }}"
+          description: "Average query time is {{ printf \"%.2f\" $value }}s."
+
+  # ============================================================================
+  # MESSAGE QUEUE ALERTS (RabbitMQ)
+  # Queue health, consumer lag
+  # ============================================================================
+  - name: rabbitmq
+    rules:
+      - alert: RabbitMQConnectionDown
+        expr: rabbitmq_connection_active == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "🔴 RabbitMQ connection lost on {{ $labels.job }}"
+          description: "Service has no active RabbitMQ connection."
+
+      - alert: HighMessageBacklog
+        expr: spring_rabbitmq_listener_queue_size > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ High message backlog on {{ $labels.queue }}"
+          description: "{{ printf \"%.0f\" $value }} messages queued - consumer may be slow."
+
+  # ============================================================================
+  # REDIS CACHE ALERTS
+  # ============================================================================
+  - name: redis
+    rules:
+      - alert: RedisConnectionDown
+        expr: spring_data_redis_connection_active == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "🔴 Redis connection lost on {{ $labels.job }}"
+          description: "Service cannot connect to Redis cache."
+
+      - alert: HighCacheMissRate
+        expr: |
+          (
+            rate(cache_gets_total{result="miss"}[5m])
+            /
+            (rate(cache_gets_total{result="hit"}[5m]) + rate(cache_gets_total{result="miss"}[5m]) + 0.001)
+          ) * 100 > 50
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ High cache miss rate on {{ $labels.job }}"
+          description: "Cache miss rate is {{ printf \"%.1f\" $value }}% - performance impact."

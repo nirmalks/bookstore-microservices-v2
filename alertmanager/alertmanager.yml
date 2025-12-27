@@ -1,7 +1,101 @@
-global: {}
+# Alertmanager Configuration
+# Routes alerts based on severity to appropriate channels
 
+global:
+  # How long to wait before sending notification after alert fires
+  resolve_timeout: 5m
+
+  # Slack configuration (replace with your webhook URL)
+  # slack_api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+
+# Alert routing tree
 route:
-  receiver: "default"
+  # Default receiver
+  receiver: 'default'
+  
+  # Group alerts by these labels
+  group_by: ['alertname', 'job', 'severity']
+  
+  # Wait before sending first notification for new group
+  group_wait: 30s
+  
+  # Wait before sending notification for additional alerts in group
+  group_interval: 5m
+  
+  # Wait before resending notification
+  repeat_interval: 4h
 
+  # Child routes - matched in order
+  routes:
+    # Critical alerts - immediate notification
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 10s
+      repeat_interval: 1h
+
+    # Warning alerts - batched notification
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 1m
+      repeat_interval: 4h
+
+    # Business metrics - separate channel
+    - match_re:
+        alertname: '(HighOrderFailure.*|NoOrdersReceived|HighStockReservation.*)'
+      receiver: 'business-alerts'
+      group_wait: 1m
+
+# Notification receivers
 receivers:
-  - name: "default"
+  # Default catch-all
+  - name: 'default'
+    # webhook_configs:
+    #   - url: 'http://localhost:5001/webhook'
+
+  # Critical alerts - page on-call
+  - name: 'critical-alerts'
+    # slack_configs:
+    #   - channel: '#alerts-critical'
+    #     title: '🔴 CRITICAL: {{ .GroupLabels.alertname }}'
+    #     text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
+    # pagerduty_configs:
+    #   - service_key: 'YOUR_PAGERDUTY_KEY'
+
+  # Warning alerts - notify team
+  - name: 'warning-alerts'
+    # slack_configs:
+    #   - channel: '#alerts-warning'
+    #     title: '⚠️ Warning: {{ .GroupLabels.alertname }}'
+    #     text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
+
+  # Business alerts - notify business stakeholders
+  - name: 'business-alerts'
+    # slack_configs:
+    #   - channel: '#business-alerts'
+    #     title: '📊 Business Alert: {{ .GroupLabels.alertname }}'
+    #     text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
+
+# Inhibition rules - suppress alerts when related critical alert is firing
+inhibit_rules:
+  # If service is down, suppress memory/CPU alerts
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match_re:
+      alertname: '(HighHeapMemoryUsage|HighCPUUsage)'
+    equal: ['job']
+
+  # If critical error rate, suppress warning
+  - source_match:
+      alertname: 'CriticalErrorRate'
+    target_match:
+      alertname: 'HighErrorRate'
+    equal: ['job']
+
+  # If critical latency, suppress warning
+  - source_match:
+      alertname: 'CriticalLatencyP99'
+    target_match:
+      alertname: 'HighLatencyP99'
+    equal: ['job']
