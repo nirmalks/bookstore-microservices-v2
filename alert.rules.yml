@@ -14,7 +14,7 @@ groups:
         annotations:
           summary: "🔴 Service {{ $labels.job }} is DOWN"
           description: "{{ $labels.instance }} has been unreachable for 30 seconds."
-          runbook_url: "https://wiki.internal/runbooks/service-down"
+          runbook_url: "https://github.com/nirmalks/bookstore-microservices-v2/wiki/Troubleshooting#service-down"
 
       - alert: ServiceFlapping
         expr: changes(up[10m]) > 3
