@@ -108,7 +108,7 @@ public class OrderServiceImpl implements OrderService {
 				.map(item -> new OrderItemPayload(item.getBookId(), item.getQuantity()))
 				.toList();
 
-			OrderMessage message = new OrderMessage(savedOrder.getId().toString(), user.getId(), user.getEmail(),
+			OrderMessage message = new OrderMessage(null, savedOrder.getId().toString(), user.getId(), user.getEmail(),
 					savedOrder.getTotalCost(), savedOrder.getPlacedDate(), itemPayloads);
 			outboxService.saveOrderCreatedEvent(savedOrder.getId().toString(), message);
 

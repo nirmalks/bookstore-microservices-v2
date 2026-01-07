@@ -3,6 +3,7 @@ package com.nirmalks.checkout_service.order.service;
 import com.nirmalks.checkout_service.order.entity.Outbox;
 import com.nirmalks.checkout_service.order.messaging.OrderEventPublisher;
 import com.nirmalks.checkout_service.order.repository.OutboxRepository;
+import dto.OrderMessage;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,14 @@ public class OutboxRelayService {
 		for (Outbox event : events) {
 			try {
 				logger.info("Publishing event ID: {}", event.getId());
-				orderEventPublisher.publishOrderCreatedEvent(event.getPayload());
+
+				// Inject the Outbox ID as the eventId for consumer idempotency
+				OrderMessage originalMessage = event.getPayload();
+				OrderMessage messageWithEventId = new OrderMessage(event.getId().toString(), originalMessage.orderId(),
+						originalMessage.userId(), originalMessage.email(), originalMessage.totalCost(),
+						originalMessage.placedAt(), originalMessage.items());
+
+				orderEventPublisher.publishOrderCreatedEvent(messageWithEventId);
 				event.setStatus(Outbox.EventStatus.SENT);
 			}
 			catch (Exception e) {
