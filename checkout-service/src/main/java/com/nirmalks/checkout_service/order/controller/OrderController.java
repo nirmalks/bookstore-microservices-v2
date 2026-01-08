@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/api/v1/orders")
 @SecurityRequirement(name = "bearerAuth") // Assuming order operations require
 											// authentication
 @Tag(name = "Order Management", description = "Operations related to user orders") // Added

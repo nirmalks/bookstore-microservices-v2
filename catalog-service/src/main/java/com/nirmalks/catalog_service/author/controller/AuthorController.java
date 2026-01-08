@@ -21,7 +21,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/api/authors")
+@RequestMapping("/api/v1/authors")
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Author Management", description = "Operations related to authors in the Bookstore API") // Add
 																										// this

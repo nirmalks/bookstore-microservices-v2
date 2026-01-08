@@ -23,7 +23,7 @@ public class JwtHeaderAuthenticationFilter extends OncePerRequestFilter {
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
-		return request.getRequestURI().startsWith("/api/internal/")
+		return request.getRequestURI().startsWith("/api/v1/internal/")
 				|| request.getRequestURI().startsWith("/v3/api-docs")
 				|| request.getRequestURI().startsWith("/swagger-ui/**");
 	}

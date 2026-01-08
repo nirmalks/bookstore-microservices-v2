@@ -23,8 +23,8 @@ public class SecurityConfig {
 	@Bean
 	@Order(0)
 	public SecurityFilterChain internalApiChain(HttpSecurity http) throws Exception {
-		http.securityMatcher("/api/internal/**")
-			.authorizeHttpRequests(auth -> auth.requestMatchers("/api/internal/users/auth")
+		http.securityMatcher("/api/v1/internal/**")
+			.authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/internal/users/auth")
 				.hasAuthority("SCOPE_internal_api")
 				.anyRequest()
 				.authenticated())
@@ -38,13 +38,14 @@ public class SecurityConfig {
 	@Bean
 	@Order(1)
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.securityMatcher(request -> !request.getRequestURI().startsWith("/api/internal/"))
-			.authorizeHttpRequests(auth -> auth.requestMatchers("/api/users/register", "/api/login", "/actuator/**")
-				.permitAll()
-				.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/error", "/swagger-resources/**")
-				.permitAll()
-				.anyRequest()
-				.authenticated())
+		http.securityMatcher(request -> !request.getRequestURI().startsWith("/api/v1/internal/"))
+			.authorizeHttpRequests(
+					auth -> auth.requestMatchers("/api/v1/users/register", "/api/v1/login", "/actuator/**")
+						.permitAll()
+						.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/error", "/swagger-resources/**")
+						.permitAll()
+						.anyRequest()
+						.authenticated())
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.csrf(AbstractHttpConfigurer::disable)
 			.httpBasic(AbstractHttpConfigurer::disable)

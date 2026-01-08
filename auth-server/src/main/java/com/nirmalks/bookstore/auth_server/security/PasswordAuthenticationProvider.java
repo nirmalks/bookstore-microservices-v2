@@ -64,7 +64,7 @@ public class PasswordAuthenticationProvider implements AuthenticationProvider {
 			loginRequest.setPassword(password);
 
 			UserDtoInternal userDto = webClient.post()
-				.uri("/api/internal/users/auth")
+				.uri("/api/v1/internal/users/auth")
 				.attributes(ServerOAuth2AuthorizedClientExchangeFilterFunction
 					.clientRegistrationId("auth-server-client-id"))
 				.bodyValue(loginRequest)

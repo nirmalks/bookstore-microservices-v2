@@ -22,7 +22,7 @@ public class SecurityConfig {
 		http.authorizeHttpRequests(auth -> auth
 			.requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**", "/error", "/swagger-resources/**")
 			.permitAll()
-			.requestMatchers(HttpMethod.GET, "/api/books/**", "/api/books", "/api/genres")
+			.requestMatchers(HttpMethod.GET, "/api/v1/books/**", "/api/v1/books", "/api/v1/genres")
 			.permitAll()
 			.anyRequest()
 			.authenticated())
