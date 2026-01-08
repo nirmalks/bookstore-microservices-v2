@@ -58,9 +58,9 @@ public class SecurityConfig {
 				.accessTokenResponseHandler(new CustomAccessTokenResponseHandler()));
 
 		http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
-			.authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/oauth2/token").permitAll())
+			.authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/v1/oauth2/token").permitAll())
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-			.csrf(csrf -> csrf.ignoringRequestMatchers("/api/oauth2/token"))
+			.csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/oauth2/token"))
 			.with(authorizationServerConfigurer, customizer -> {
 			});
 
@@ -176,7 +176,7 @@ public class SecurityConfig {
 
 	@Bean
 	public AuthorizationServerSettings authorizationServerSettings() {
-		return AuthorizationServerSettings.builder().tokenEndpoint("/api" + "/oauth2/token").build();
+		return AuthorizationServerSettings.builder().tokenEndpoint("/api/v1" + "/oauth2/token").build();
 	}
 
 }

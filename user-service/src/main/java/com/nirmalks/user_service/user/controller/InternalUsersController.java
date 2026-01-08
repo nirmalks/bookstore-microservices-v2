@@ -12,7 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/internal/users")
+@RequestMapping("/api/v1/internal/users")
 public class InternalUsersController {
 
 	@Autowired

@@ -47,7 +47,7 @@ public class CartServiceImpl implements CartService {
 	@CircuitBreaker(name = "catalogServiceCB", fallbackMethod = "catalogServiceUnavailableFallback")
 	public Mono<BookDto> getBookDto(Long bookId) {
 		return catalogServiceWebClient.get()
-			.uri("/api/books/{id}", bookId)
+			.uri("/api/v1/books/{id}", bookId)
 			.retrieve()
 			.bodyToMono(BookDto.class)
 			.onErrorMap(ex -> {

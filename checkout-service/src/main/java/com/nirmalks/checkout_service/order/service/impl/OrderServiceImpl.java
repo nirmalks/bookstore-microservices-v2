@@ -182,7 +182,7 @@ public class OrderServiceImpl implements OrderService {
 	@RateLimiter(name = "userService", fallbackMethod = "getUserDtoFallback")
 	public Mono<UserDto> getUserDtoFromUserService(Long userId) {
 		return userServiceWebClient.get()
-			.uri("/api/users/{id}", userId)
+			.uri("/api/v1/users/{id}", userId)
 			.retrieve()
 			.bodyToMono(UserDto.class)
 			.onErrorMap(ex -> {
@@ -199,7 +199,7 @@ public class OrderServiceImpl implements OrderService {
 	@RateLimiter(name = "catalogService", fallbackMethod = "getBookDtoFallback")
 	public Mono<BookDto> getBookDtoFromCatalogService(Long bookId) {
 		return catalogServiceWebClient.get()
-			.uri("/api/books/{id}", bookId)
+			.uri("/api/v1/books/{id}", bookId)
 			.retrieve()
 			.bodyToMono(BookDto.class)
 			.onErrorMap(ex -> {

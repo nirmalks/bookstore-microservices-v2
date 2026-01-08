@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "User Management", description = "Operations related to user accounts and profiles")
 public class UserController {

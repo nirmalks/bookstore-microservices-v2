@@ -28,7 +28,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		String url = userServiceBaseUrl + "/api/internal/users/by-username/{username}";
+		String url = userServiceBaseUrl + "/api/v1/internal/users/by-username/{username}";
 		Optional<UserDtoInternal> userDtoOptional = webClient.get()
 			.uri(url, username)
 			.retrieve()

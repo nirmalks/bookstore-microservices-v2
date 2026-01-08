@@ -23,7 +23,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/books")
+@RequestMapping("/api/v1/books")
 @SecurityRequirement(name = "bearerAuth") // Added for consistency with AuthorController
 @Tag(name = "Book Management", description = "Operations related to books in the Bookstore API") // Added
 																									// Tag

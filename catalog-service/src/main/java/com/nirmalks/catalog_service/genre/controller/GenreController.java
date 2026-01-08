@@ -21,7 +21,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/api/genres")
+@RequestMapping("/api/v1/genres")
 @SecurityRequirement(name = "bearerAuth") // Assuming genre management requires
 											// authentication
 @Tag(name = "Genre Management", description = "Operations related to book genres") // Added
