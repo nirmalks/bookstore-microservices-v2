@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class InventoryEventPublisher {
 
@@ -19,16 +21,19 @@ public class InventoryEventPublisher {
 	}
 
 	public void publishStockReservedEvent(String orderId) {
-		StockReservationSuccessEvent event = new StockReservationSuccessEvent(orderId);
-		logger.info("Publishing Stock Reserved event for Order ID: {}", orderId);
+		String eventId = UUID.randomUUID().toString();
+		StockReservationSuccessEvent event = new StockReservationSuccessEvent(eventId, orderId);
+		logger.info("Publishing Stock Reserved event for Order ID: {}, eventId: {}", orderId, eventId);
 
 		rabbitTemplate.convertAndSend(RabbitMqConfig.INVENTORY_EXCHANGE,
 				RabbitMqConfig.STOCK_RESERVATION_SUCCESS_ROUTING_KEY, event);
 	}
 
 	public void publishStockFailedEvent(String orderId, String reason) {
-		StockReservationFailedEvent event = new StockReservationFailedEvent(orderId, reason);
-		logger.error("Publishing Stock Failed event for Order ID: {} with reason: {}", orderId, reason);
+		String eventId = UUID.randomUUID().toString();
+		StockReservationFailedEvent event = new StockReservationFailedEvent(eventId, orderId, reason);
+		logger.error("Publishing Stock Failed event for Order ID: {}, eventId: {}, reason: {}", orderId, eventId,
+				reason);
 
 		rabbitTemplate.convertAndSend(RabbitMqConfig.INVENTORY_EXCHANGE,
 				RabbitMqConfig.STOCK_RESERVATION_FAILED_ROUTING_KEY, event);

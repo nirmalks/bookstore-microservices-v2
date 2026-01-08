@@ -92,11 +92,11 @@ public class OrderServiceImpl implements OrderService {
 
 			ExecutorService executor = Executors.newFixedThreadPool(8);
 			List<CompletableFuture<OrderItem>> orderItemFutures = itemDtos.stream()
-					.map(itemDto -> CompletableFuture.supplyAsync(() -> {
-						var book = getBookDtoFromCatalogService(itemDto.getBookId()).block();
-						return OrderMapper.toOrderItemEntity(book, itemDto, order);
-					}, executor))
-					.toList();
+				.map(itemDto -> CompletableFuture.supplyAsync(() -> {
+					var book = getBookDtoFromCatalogService(itemDto.getBookId()).block();
+					return OrderMapper.toOrderItemEntity(book, itemDto, order);
+				}, executor))
+				.toList();
 			List<OrderItem> orderItems = orderItemFutures.stream().map(CompletableFuture::join).toList();
 			executor.shutdown();
 			order.setItems(orderItems);
@@ -105,10 +105,10 @@ public class OrderServiceImpl implements OrderService {
 			orderItemRepository.saveAll(orderItems);
 
 			List<OrderItemPayload> itemPayloads = orderItems.stream()
-					.map(item -> new OrderItemPayload(item.getBookId(), item.getQuantity()))
-					.toList();
+				.map(item -> new OrderItemPayload(item.getBookId(), item.getQuantity()))
+				.toList();
 
-			OrderMessage message = new OrderMessage(savedOrder.getId().toString(), user.getId(), user.getEmail(),
+			OrderMessage message = new OrderMessage(null, savedOrder.getId().toString(), user.getId(), user.getEmail(),
 					savedOrder.getTotalCost(), savedOrder.getPlacedDate(), itemPayloads);
 			outboxService.saveOrderCreatedEvent(savedOrder.getId().toString(), message);
 
@@ -118,10 +118,12 @@ public class OrderServiceImpl implements OrderService {
 			orderMetrics.recordRevenue(savedOrder.getTotalCost());
 
 			return OrderMapper.toResponse(user, savedOrder, "Order placed successfully.");
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			orderMetrics.incrementOrdersFailed();
 			throw e;
-		} finally {
+		}
+		finally {
 			orderMetrics.stopOrderCreationTimer(sample);
 		}
 	}
@@ -129,7 +131,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public OrderResponse createOrder(OrderFromCartRequest orderFromCartRequest) {
 		Cart cart = cartRepository.findById(orderFromCartRequest.getCartId())
-				.orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+			.orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 		List<OrderItem> orderItems = new ArrayList<>();
 		UserDto user = getUserDtoFromUserService(orderFromCartRequest.getUserId()).block();
 		Order order = OrderMapper.toOrderEntity(user, orderFromCartRequest.getShippingAddress());
@@ -169,7 +171,7 @@ public class OrderServiceImpl implements OrderService {
 
 	public void updateOrderStatus(Long orderId, OrderStatus status) {
 		Order order = orderRepository.findById(orderId)
-				.orElseThrow(() -> new IllegalArgumentException("Order not found"));
+			.orElseThrow(() -> new IllegalArgumentException("Order not found"));
 		order.setOrderStatus(status);
 		orderRepository.save(order);
 	}
@@ -180,15 +182,15 @@ public class OrderServiceImpl implements OrderService {
 	@RateLimiter(name = "userService", fallbackMethod = "getUserDtoFallback")
 	public Mono<UserDto> getUserDtoFromUserService(Long userId) {
 		return userServiceWebClient.get()
-				.uri("/api/users/{id}", userId)
-				.retrieve()
-				.bodyToMono(UserDto.class)
-				.onErrorMap(ex -> {
-					if (ex instanceof WebClientResponseException wcEx && wcEx.getStatusCode() == HttpStatus.NOT_FOUND) {
-						return new ResourceNotFoundException("User not found for ID: " + userId);
-					}
-					return ex;
-				});
+			.uri("/api/users/{id}", userId)
+			.retrieve()
+			.bodyToMono(UserDto.class)
+			.onErrorMap(ex -> {
+				if (ex instanceof WebClientResponseException wcEx && wcEx.getStatusCode() == HttpStatus.NOT_FOUND) {
+					return new ResourceNotFoundException("User not found for ID: " + userId);
+				}
+				return ex;
+			});
 	}
 
 	@Bulkhead(name = "catalogService")
@@ -197,16 +199,16 @@ public class OrderServiceImpl implements OrderService {
 	@RateLimiter(name = "catalogService", fallbackMethod = "getBookDtoFallback")
 	public Mono<BookDto> getBookDtoFromCatalogService(Long bookId) {
 		return catalogServiceWebClient.get()
-				.uri("/api/books/{id}", bookId)
-				.retrieve()
-				.bodyToMono(BookDto.class)
-				.onErrorMap(ex -> {
-					if (ex instanceof WebClientResponseException wcEx && wcEx.getStatusCode() == HttpStatus.NOT_FOUND) {
-						return new ResourceNotFoundException("Book not found for ID: " + bookId);
-					}
-					return ex;
-				})
-				.onErrorResume(throwable -> getBookDtoFallback(bookId, throwable));
+			.uri("/api/books/{id}", bookId)
+			.retrieve()
+			.bodyToMono(BookDto.class)
+			.onErrorMap(ex -> {
+				if (ex instanceof WebClientResponseException wcEx && wcEx.getStatusCode() == HttpStatus.NOT_FOUND) {
+					return new ResourceNotFoundException("Book not found for ID: " + bookId);
+				}
+				return ex;
+			})
+			.onErrorResume(throwable -> getBookDtoFallback(bookId, throwable));
 	}
 
 	@Transactional
@@ -214,7 +216,7 @@ public class OrderServiceImpl implements OrderService {
 		try {
 			Long orderId = Long.valueOf(orderIdString);
 			Order order = orderRepository.findById(orderId)
-					.orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+				.orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
 			if (order.getOrderStatus() == OrderStatus.CANCELLED || order.getOrderStatus() == OrderStatus.CONFIRMED) {
 				logger.warn("Order {} is already {}, ignoring update to {}", orderId, order.getOrderStatus(),
 						newStatus);
@@ -223,7 +225,8 @@ public class OrderServiceImpl implements OrderService {
 			order.setOrderStatus(newStatus);
 			orderRepository.save(order);
 			logger.info("Updated Order {} status to {}. Reason: {}", orderId, newStatus, reason);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			logger.error("Failed to update order status for ID: {}", orderIdString, e);
 			throw e;
 		}

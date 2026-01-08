@@ -1,4 +1,6 @@
 package dto;
 
-public record StockReservationFailedEvent(String orderId, String reason) {
+import java.io.Serializable;
+
+public record StockReservationFailedEvent(String eventId, String orderId, String reason) implements Serializable {
 }
