@@ -48,6 +48,22 @@ services:
       timeout: 5s
       retries: 5
 
+  notification-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: bookstore_notification_service_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5436:5432"
+    volumes:
+      - notification-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d bookstore_notification_service_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   rabbitmq:
     image: rabbitmq:4-management
     container_name: rabbitmq-dev
@@ -253,10 +269,16 @@ services:
     depends_on:
       discovery-service:
         condition: service_healthy
+      notification-db:
+        condition: service_healthy
       otel-collector:
         condition: service_started
       rabbitmq:
         condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://notification-db:5432/bookstore_notification_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin123
     restart: on-failure
     healthcheck:
       test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8084'" ]
@@ -342,3 +364,4 @@ volumes:
   checkout-db-data:
   rabbitmq-data:
   loki-data:
+  notification-db-data:
