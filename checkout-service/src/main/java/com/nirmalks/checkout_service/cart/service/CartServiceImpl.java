@@ -7,31 +7,28 @@ import com.nirmalks.checkout_service.cart.entity.Cart;
 import com.nirmalks.checkout_service.cart.entity.CartItem;
 import com.nirmalks.checkout_service.cart.repository.CartItemRepository;
 import com.nirmalks.checkout_service.cart.repository.CartRepository;
+import com.nirmalks.checkout_service.client.CatalogServiceClient;
 import com.nirmalks.checkout_service.common.BookDto;
 import exceptions.ResourceNotFoundException;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+/**
+ * Cart service implementation that handles shopping cart operations.
+ */
 @Service
 public class CartServiceImpl implements CartService {
 
-	@Autowired
-	private CartRepository cartRepository;
+	private final CartRepository cartRepository;
+
+	private final CatalogServiceClient catalogServiceClient;
 
 	@Autowired
-	private CartItemRepository cartItemRepository;
-
-	private final WebClient catalogServiceWebClient;
-
-	public CartServiceImpl(@Qualifier("catalogServiceWebClient") WebClient catalogServiceWebClient) {
-		this.catalogServiceWebClient = catalogServiceWebClient;
+	public CartServiceImpl(CartRepository cartRepository, CatalogServiceClient catalogServiceClient) {
+		this.cartRepository = cartRepository;
+		this.catalogServiceClient = catalogServiceClient;
 	}
 
 	public CartResponse getCart(Long userId) {
@@ -40,26 +37,8 @@ public class CartServiceImpl implements CartService {
 		return CartMapper.toResponse(cart);
 	}
 
-	public BookDto catalogServiceUnavailableFallback(Long bookId, Throwable ex) {
-		throw new RuntimeException("Catalog service unavailable, cannot add book to cart");
-	}
-
-	@CircuitBreaker(name = "catalogServiceCB", fallbackMethod = "catalogServiceUnavailableFallback")
-	public Mono<BookDto> getBookDto(Long bookId) {
-		return catalogServiceWebClient.get()
-			.uri("/api/v1/books/{id}", bookId)
-			.retrieve()
-			.bodyToMono(BookDto.class)
-			.onErrorMap(ex -> {
-				if (ex instanceof WebClientResponseException wcEx && wcEx.getStatusCode().is4xxClientError()) {
-					return new ResourceNotFoundException("Book not found for ID: " + bookId);
-				}
-				return ex;
-			});
-	}
-
 	public CartResponse addToCart(Long userId, CartItemRequest cartItemRequest) {
-		BookDto book = getBookDto(cartItemRequest.getBookId()).block();
+		BookDto book = catalogServiceClient.getBook(cartItemRequest.getBookId());
 		Cart cart = cartRepository.findByUserId(userId).orElseGet(() -> createCartForUser(userId));
 
 		Cart updatedCart = cartRepository.save(CartMapper.toEntity(book, cart, cartItemRequest));
