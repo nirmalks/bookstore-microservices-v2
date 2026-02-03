@@ -178,7 +178,7 @@ services:
       dockerfile: catalog-service/Dockerfile
     image: catalog-service:0.0.1-SNAPSHOT
     ports:
-      - "8082:8082"
+      - "8200-8205:8082"
     depends_on:
       discovery-service:
         condition: service_healthy
@@ -212,7 +212,7 @@ services:
       dockerfile: user-service/Dockerfile
     image: user-service:0.0.1-SNAPSHOT
     ports:
-      - "8081:8081"
+      - "8100-8105:8081"
     depends_on:
       discovery-service:
         condition: service_healthy
@@ -240,7 +240,7 @@ services:
       dockerfile: checkout-service/Dockerfile
     image: checkout-service:0.0.1-SNAPSHOT
     ports:
-      - "8083:8083"
+      - "8300-8305:8083"
     depends_on:
       discovery-service:
         condition: service_healthy
@@ -248,10 +248,14 @@ services:
         condition: service_healthy
       otel-collector:
         condition: service_started
+      redis:
+        condition: service_healthy
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://checkout-db:5432/bookstore_checkout_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin123
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     restart: on-failure
     healthcheck:
       test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8083'" ]
@@ -265,7 +269,7 @@ services:
       dockerfile: notification-service/Dockerfile
     image: notification-service:0.0.1-SNAPSHOT
     ports:
-      - "8084:8084"
+      - "8400-8405:8084"
     depends_on:
       discovery-service:
         condition: service_healthy
@@ -275,10 +279,14 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://notification-db:5432/bookstore_notification_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin123
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     restart: on-failure
     healthcheck:
       test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8084'" ]

@@ -15,6 +15,9 @@ import dto.OrderMessage;
 import dto.PageRequestDto;
 import exceptions.ResourceNotFoundException;
 import io.micrometer.core.instrument.Timer;
+import locking.DistributedLockService;
+import locking.LockKeys;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -27,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class BookServiceImpl implements BookService {
@@ -42,6 +46,9 @@ public class BookServiceImpl implements BookService {
 
 	@Autowired
 	private BookMetrics bookMetrics;
+
+	@Autowired
+	private DistributedLockService distributedLockService;
 
 	@Override
 	@Cacheable(value = "books", key = "#pageRequestDto.page")
@@ -134,21 +141,27 @@ public class BookServiceImpl implements BookService {
 			evict = { @CacheEvict(value = "books", allEntries = true), @CacheEvict(value = "book", allEntries = true) })
 	public void updateStock(OrderMessage orderMessage) {
 		orderMessage.items().forEach(item -> {
-			int rowsUpdated = bookRepository.decrementStock(item.bookId(), item.quantity());
 
-			if (rowsUpdated == 0) {
-				bookMetrics.incrementStockReservationFailure();
-				throw new RuntimeException("Stock update failed for Book ID: " + item.bookId());
-			}
+			String lockKey = LockKeys.bookStock(item.bookId());
 
-			bookMetrics.incrementStockReservationSuccess();
+			distributedLockService.executeWithLock(lockKey, 5, 30, TimeUnit.SECONDS, () -> {
+				int rowsUpdated = bookRepository.decrementStock(item.bookId(), item.quantity());
 
-			// Check if stock is low after decrement
-			bookRepository.findById(item.bookId()).ifPresent(book -> {
-				if (book.getStock() < 10) {
-					bookMetrics.recordLowStockAlert(item.bookId(), book.getStock());
+				if (rowsUpdated == 0) {
+					bookMetrics.incrementStockReservationFailure();
+					throw new RuntimeException("Stock update failed for Book ID: " + item.bookId());
 				}
+
+				bookMetrics.incrementStockReservationSuccess();
+
+				// Check if stock is low after decrement
+				bookRepository.findById(item.bookId()).ifPresent(book -> {
+					if (book.getStock() < 10) {
+						bookMetrics.recordLowStockAlert(item.bookId(), book.getStock());
+					}
+				});
 			});
+
 		});
 	}
 

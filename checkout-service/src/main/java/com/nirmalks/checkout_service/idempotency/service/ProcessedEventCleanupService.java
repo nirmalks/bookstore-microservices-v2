@@ -9,8 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.nirmalks.checkout_service.idempotency.repository.ProcessedEventRepository;
 
+import locking.DistributedLockService;
+import locking.LockKeys;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Scheduled service to clean up old processed event records. This prevents the
@@ -24,11 +28,18 @@ public class ProcessedEventCleanupService {
 
 	private final ProcessedEventRepository processedEventRepository;
 
+	private final DistributedLockService distributedLockService;
+
+	private final String cleanupLockKey;
+
 	@Value("${idempotency.cleanup.retention-days:7}")
 	private int retentionDays;
 
-	public ProcessedEventCleanupService(ProcessedEventRepository processedEventRepository) {
+	public ProcessedEventCleanupService(ProcessedEventRepository processedEventRepository,
+			DistributedLockService distributedLockService) {
 		this.processedEventRepository = processedEventRepository;
+		this.distributedLockService = distributedLockService;
+		this.cleanupLockKey = LockKeys.IDEMPOTENCY_CLEANUP_CHECKOUT;
 	}
 
 	/**
@@ -38,6 +49,16 @@ public class ProcessedEventCleanupService {
 	@Scheduled(cron = "${idempotency.cleanup.cron:0 0 2 * * ?}")
 	@Transactional
 	public void cleanupOldProcessedEvents() {
+		boolean executed = distributedLockService.tryExecuteWithLock(cleanupLockKey, 0, 300, // 5
+																								// minutes
+				TimeUnit.SECONDS, () -> doCleanupOldEvents());
+
+		if (!executed) {
+			logger.debug("Cleanup skipped - another instance is running cleanup");
+		}
+	}
+
+	private void doCleanupOldEvents() {
 		Instant cutoffTime = Instant.now().minus(retentionDays, ChronoUnit.DAYS);
 		logger.info("Starting processed events cleanup. Deleting events older than {} (retention: {} days)", cutoffTime,
 				retentionDays);

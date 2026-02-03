@@ -10,10 +10,14 @@ import com.nirmalks.checkout_service.cart.repository.CartRepository;
 import com.nirmalks.checkout_service.client.CatalogServiceClient;
 import com.nirmalks.checkout_service.common.BookDto;
 import exceptions.ResourceNotFoundException;
+import locking.DistributedLockService;
+import locking.LockKeys;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Cart service implementation that handles shopping cart operations.
@@ -25,10 +29,14 @@ public class CartServiceImpl implements CartService {
 
 	private final CatalogServiceClient catalogServiceClient;
 
+	private final DistributedLockService distributedLockService;
+
 	@Autowired
-	public CartServiceImpl(CartRepository cartRepository, CatalogServiceClient catalogServiceClient) {
+	public CartServiceImpl(CartRepository cartRepository, CatalogServiceClient catalogServiceClient,
+			DistributedLockService distributedLockService) {
 		this.cartRepository = cartRepository;
 		this.catalogServiceClient = catalogServiceClient;
+		this.distributedLockService = distributedLockService;
 	}
 
 	public CartResponse getCart(Long userId) {
@@ -38,18 +46,26 @@ public class CartServiceImpl implements CartService {
 	}
 
 	public CartResponse addToCart(Long userId, CartItemRequest cartItemRequest) {
-		BookDto book = catalogServiceClient.getBook(cartItemRequest.getBookId());
-		Cart cart = cartRepository.findByUserId(userId).orElseGet(() -> createCartForUser(userId));
+		String lockKey = LockKeys.userCart(userId);
 
-		Cart updatedCart = cartRepository.save(CartMapper.toEntity(book, cart, cartItemRequest));
-		return CartMapper.toResponse(updatedCart);
+		return distributedLockService.executeWithLock(lockKey, 3, 10, TimeUnit.SECONDS, () -> {
+			BookDto book = catalogServiceClient.getBook(cartItemRequest.getBookId());
+			Cart cart = cartRepository.findByUserId(userId).orElseGet(() -> createCartForUser(userId));
+
+			Cart updatedCart = cartRepository.save(CartMapper.toEntity(book, cart, cartItemRequest));
+			return CartMapper.toResponse(updatedCart);
+		});
 	}
 
 	public void clearCart(Long userId) {
-		Cart cart = cartRepository.findByUserId(userId)
-			.orElseThrow(() -> new ResourceNotFoundException("Cart not found for user"));
-		cart.getCartItems().clear();
-		cartRepository.save(cart);
+		String lockKey = LockKeys.userCart(userId);
+
+		distributedLockService.executeWithLock(lockKey, 3, 10, TimeUnit.SECONDS, () -> {
+			Cart cart = cartRepository.findByUserId(userId)
+				.orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+			cart.getCartItems().clear();
+			cartRepository.save(cart);
+		});
 	}
 
 	private Cart createCartForUser(Long userId) {
