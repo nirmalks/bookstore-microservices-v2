@@ -27,6 +27,9 @@ import dto.PageRequestDto;
 import exceptions.ResourceNotFoundException;
 import io.micrometer.core.instrument.Timer;
 import jakarta.transaction.Transactional;
+import locking.DistributedLockService;
+import locking.LockKeys;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +42,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Order service implementation that handles order creation and management.
@@ -62,10 +66,13 @@ public class OrderServiceImpl implements OrderService {
 
 	private final OrderMetrics orderMetrics;
 
+	private final DistributedLockService distributedLockService;
+
 	@Autowired
 	public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
 			CartRepository cartRepository, CatalogServiceClient catalogServiceClient,
-			UserServiceClient userServiceClient, OutboxService outboxService, OrderMetrics orderMetrics) {
+			UserServiceClient userServiceClient, OutboxService outboxService, OrderMetrics orderMetrics,
+			DistributedLockService distributedLockService) {
 		this.orderRepository = orderRepository;
 		this.orderItemRepository = orderItemRepository;
 		this.cartRepository = cartRepository;
@@ -73,6 +80,7 @@ public class OrderServiceImpl implements OrderService {
 		this.userServiceClient = userServiceClient;
 		this.outboxService = outboxService;
 		this.orderMetrics = orderMetrics;
+		this.distributedLockService = distributedLockService;
 	}
 
 	@Override
@@ -174,15 +182,24 @@ public class OrderServiceImpl implements OrderService {
 
 	@Transactional
 	public void updateOrderStatusByEvent(String orderIdString, OrderStatus newStatus, String reason) {
+		String lockKey = LockKeys.orderStatus(orderIdString);
+
+		distributedLockService.executeWithLock(lockKey, 5, 30, TimeUnit.SECONDS,
+				() -> doUpdateOrderStatus(orderIdString, newStatus, reason));
+	}
+
+	private void doUpdateOrderStatus(String orderIdString, OrderStatus newStatus, String reason) {
 		try {
 			Long orderId = Long.valueOf(orderIdString);
 			Order order = orderRepository.findById(orderId)
 				.orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+
 			if (order.getOrderStatus() == OrderStatus.CANCELLED || order.getOrderStatus() == OrderStatus.CONFIRMED) {
 				logger.warn("Order {} is already {}, ignoring update to {}", orderId, order.getOrderStatus(),
 						newStatus);
 				return;
 			}
+
 			order.setOrderStatus(newStatus);
 			orderRepository.save(order);
 			logger.info("Updated Order {} status to {}. Reason: {}", orderId, newStatus, reason);
