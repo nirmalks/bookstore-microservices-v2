@@ -1,0 +1,17 @@
+package saga;
+
+public enum SagaState {
+
+	// Initial state
+	SAGA_STARTED,
+
+	// Inventory reservation states
+	STOCK_RESERVATION_PENDING, STOCK_RESERVED, STOCK_RESERVATION_FAILED,
+
+	// Payment states (future)
+	PAYMENT_PENDING, PAYMENT_COMPLETED, PAYMENT_FAILED,
+
+	// Completion states
+	SAGA_COMPLETED, SAGA_COMPENSATING, SAGA_COMPENSATION_COMPLETED, SAGA_FAILED
+
+}

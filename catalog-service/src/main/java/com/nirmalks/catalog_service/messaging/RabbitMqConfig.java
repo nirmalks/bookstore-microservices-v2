@@ -29,6 +29,10 @@ public class RabbitMqConfig {
 
 	public static final String CHECKOUT_DLQ_ROUTING_KEY = "dead.letter";
 
+	public static final String QUEUE_STOCK_RELEASE = "stock.release.queue";
+
+	public static final String STOCK_RELEASE_ROUTING_KEY = "stock.release";
+
 	@Bean
 	public TopicExchange checkoutExchange() {
 		return ExchangeBuilder.topicExchange(CHECKOUT_EXCHANGE).durable(true).build();
@@ -65,6 +69,16 @@ public class RabbitMqConfig {
 	@Bean
 	public TopicExchange inventoryExchange() {
 		return ExchangeBuilder.topicExchange(INVENTORY_EXCHANGE).durable(true).build();
+	}
+
+	@Bean
+	public Queue stockReleaseQueue() {
+		return QueueBuilder.durable(QUEUE_STOCK_RELEASE).build();
+	}
+
+	@Bean
+	public Binding stockReleaseBinding(Queue stockReleaseQueue, TopicExchange inventoryExchange) {
+		return BindingBuilder.bind(stockReleaseQueue).to(inventoryExchange).with(STOCK_RELEASE_ROUTING_KEY);
 	}
 
 	@Bean

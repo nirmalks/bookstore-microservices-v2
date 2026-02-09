@@ -38,6 +38,8 @@ public class RabbitMqConfig {
 
 	public static final String STOCK_RESERVATION_WILDCARD_KEY = "stock.reservation.#";
 
+	public static final String STOCK_RELEASE_ROUTING_KEY = "stock.release";
+
 	@Bean
 	public TopicExchange checkoutExchange() {
 		return ExchangeBuilder.topicExchange(CHECKOUT_EXCHANGE).durable(true).build();

@@ -13,11 +13,14 @@ import common.RequestUtils;
 import common.RestPage;
 import dto.OrderMessage;
 import dto.PageRequestDto;
+import exceptions.InsufficientStockException;
 import exceptions.ResourceNotFoundException;
 import io.micrometer.core.instrument.Timer;
 import locking.DistributedLockService;
 import locking.LockKeys;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -49,6 +52,8 @@ public class BookServiceImpl implements BookService {
 
 	@Autowired
 	private DistributedLockService distributedLockService;
+
+	private final Logger logger = LoggerFactory.getLogger(BookServiceImpl.class);
 
 	@Override
 	@Cacheable(value = "books", key = "#pageRequestDto.page")
@@ -136,6 +141,11 @@ public class BookServiceImpl implements BookService {
 
 	}
 
+	/**
+	 * @deprecated Use {@link #reserveStock(Long, int)} instead for saga support. This
+	 * method will be removed in a future release.
+	 */
+	@Deprecated
 	@Transactional
 	@Caching(
 			evict = { @CacheEvict(value = "books", allEntries = true), @CacheEvict(value = "book", allEntries = true) })
@@ -162,6 +172,60 @@ public class BookServiceImpl implements BookService {
 				});
 			});
 
+		});
+	}
+
+	@Override
+	@Transactional
+	@CacheEvict(value = { "books", "book" }, allEntries = true)
+	public void reserveStock(Long bookId, int quantity) throws InsufficientStockException {
+		String lockKey = LockKeys.bookStock(bookId);
+
+		distributedLockService.executeWithLock(lockKey, 5, 30, TimeUnit.SECONDS, () -> {
+			Book book = bookRepository.findById(bookId)
+				.orElseThrow(() -> new ResourceNotFoundException("Book not found: " + bookId));
+
+			if (book.getStock() < quantity) {
+				bookMetrics.incrementStockReservationFailure();
+				throw new InsufficientStockException(bookId, quantity, book.getStock(),
+						"Insufficient stock for book: " + book.getTitle());
+			}
+
+			int rowsUpdated = bookRepository.decrementStock(bookId, quantity);
+
+			if (rowsUpdated == 0) {
+				bookMetrics.incrementStockReservationFailure();
+				throw new InsufficientStockException(bookId, quantity, 0, "Stock reservation race condition");
+			}
+
+			bookMetrics.incrementStockReservationSuccess();
+
+			// Check if stock is low after reservation
+			int newStock = book.getStock() - quantity;
+			if (newStock < 10) {
+				bookMetrics.recordLowStockAlert(bookId, newStock);
+			}
+
+			logger.info("Reserved {} units of book {} (remaining: {})", quantity, bookId, newStock);
+		});
+	}
+
+	@Override
+	@Transactional
+	@CacheEvict(value = { "books", "book" }, allEntries = true)
+	public void releaseStock(Long bookId, int quantity) {
+		String lockKey = LockKeys.bookStock(bookId);
+
+		distributedLockService.executeWithLock(lockKey, 5, 30, TimeUnit.SECONDS, () -> {
+			int rowsUpdated = bookRepository.incrementStock(bookId, quantity);
+
+			if (rowsUpdated == 0) {
+				logger.warn("Failed to release stock for book {} - book may not exist", bookId);
+				return;
+			}
+
+			bookMetrics.incrementStockReleased();
+			logger.info("Released {} units of book {} (compensation)", quantity, bookId);
 		});
 	}
 
