@@ -75,4 +75,12 @@ public class BookMetrics {
 			.increment();
 	}
 
+	public void incrementStockReleased() {
+		Counter.builder("stock.released")
+			.description("Stock released due to order cancellation or saga compensation")
+			.tag("service", "catalog-service")
+			.register(meterRegistry)
+			.increment();
+	}
+
 }

@@ -5,6 +5,8 @@ import com.nirmalks.catalog_service.book.dto.BookDto;
 import common.RestPage;
 import dto.OrderMessage;
 import dto.PageRequestDto;
+import exceptions.InsufficientStockException;
+
 import org.springframework.data.domain.Page;
 
 import java.time.LocalDate;
@@ -31,5 +33,16 @@ public interface BookService {
 			Double maxPrice, String sortBy, String sortOrder, int page, int size);
 
 	void updateStock(OrderMessage orderMessage);
+
+	/**
+	 * Reserve stock for a book. Used by saga for inventory reservation step.
+	 * @throws InsufficientStockException if not enough stock available
+	 */
+	void reserveStock(Long bookId, int quantity) throws InsufficientStockException;
+
+	/**
+	 * Release previously reserved stock. Used for saga compensation.
+	 */
+	void releaseStock(Long bookId, int quantity);
 
 }

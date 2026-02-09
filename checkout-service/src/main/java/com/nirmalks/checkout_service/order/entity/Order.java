@@ -2,6 +2,8 @@ package com.nirmalks.checkout_service.order.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import saga.SagaState;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -37,6 +39,62 @@ public class Order {
 
 	@Embedded
 	private ShippingAddress shippingAddress;
+
+	@Column(name = "saga_id")
+	private String sagaId;
+
+	@Column(name = "saga_state")
+	@Enumerated(EnumType.STRING)
+	private SagaState sagaState;
+
+	@Column(name = "saga_started_at")
+	private LocalDateTime sagaStartedAt;
+
+	@Column(name = "saga_completed_at")
+	private LocalDateTime sagaCompletedAt;
+
+	@Column(name = "compensation_reason")
+	private String compensationReason;
+
+	public SagaState getSagaState() {
+		return sagaState;
+	}
+
+	public String getCompensationReason() {
+		return compensationReason;
+	}
+
+	public void setSagaState(SagaState sagaState) {
+		this.sagaState = sagaState;
+	}
+
+	public void setSagaId(String sagaId) {
+		this.sagaId = sagaId;
+	}
+
+	public void setSagaStartedAt(LocalDateTime sagaStartedAt) {
+		this.sagaStartedAt = sagaStartedAt;
+	}
+
+	public void setSagaCompletedAt(LocalDateTime sagaCompletedAt) {
+		this.sagaCompletedAt = sagaCompletedAt;
+	}
+
+	public void setCompensationReason(String compensationReason) {
+		this.compensationReason = compensationReason;
+	}
+
+	public LocalDateTime getSagaStartedAt() {
+		return sagaStartedAt;
+	}
+
+	public String getSagaId() {
+		return sagaId;
+	}
+
+	public LocalDateTime getSagaCompletedAt() {
+		return sagaCompletedAt;
+	}
 
 	public ShippingAddress getShippingAddress() {
 		return shippingAddress;

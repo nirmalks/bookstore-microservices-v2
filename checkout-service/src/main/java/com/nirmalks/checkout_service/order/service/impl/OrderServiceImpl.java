@@ -20,6 +20,8 @@ import com.nirmalks.checkout_service.order.repository.OrderItemRepository;
 import com.nirmalks.checkout_service.order.repository.OrderRepository;
 import com.nirmalks.checkout_service.order.service.OrderService;
 import com.nirmalks.checkout_service.order.service.OutboxService;
+import com.nirmalks.checkout_service.saga.SagaMetrics;
+
 import common.RequestUtils;
 import dto.OrderItemPayload;
 import dto.OrderMessage;
@@ -29,6 +31,7 @@ import io.micrometer.core.instrument.Timer;
 import jakarta.transaction.Transactional;
 import locking.DistributedLockService;
 import locking.LockKeys;
+import saga.SagaState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +42,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -68,11 +72,13 @@ public class OrderServiceImpl implements OrderService {
 
 	private final DistributedLockService distributedLockService;
 
+	private final SagaMetrics sagaMetrics;
+
 	@Autowired
 	public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
 			CartRepository cartRepository, CatalogServiceClient catalogServiceClient,
 			UserServiceClient userServiceClient, OutboxService outboxService, OrderMetrics orderMetrics,
-			DistributedLockService distributedLockService) {
+			DistributedLockService distributedLockService, SagaMetrics sagaMetrics) {
 		this.orderRepository = orderRepository;
 		this.orderItemRepository = orderItemRepository;
 		this.cartRepository = cartRepository;
@@ -81,6 +87,7 @@ public class OrderServiceImpl implements OrderService {
 		this.outboxService = outboxService;
 		this.orderMetrics = orderMetrics;
 		this.distributedLockService = distributedLockService;
+		this.sagaMetrics = sagaMetrics;
 	}
 
 	@Override
@@ -93,6 +100,12 @@ public class OrderServiceImpl implements OrderService {
 			var itemDtos = directOrderRequest.getItems();
 			var order = OrderMapper.toOrderEntity(user, directOrderRequest.getAddress());
 
+			// Initialize Saga State
+			String sagaId = UUID.randomUUID().toString();
+			order.setSagaId(sagaId);
+			order.setSagaState(SagaState.SAGA_STARTED);
+			order.setSagaStartedAt(LocalDateTime.now());
+
 			ExecutorService executor = Executors.newFixedThreadPool(8);
 			List<CompletableFuture<OrderItem>> orderItemFutures = itemDtos.stream()
 				.map(itemDto -> CompletableFuture.supplyAsync(() -> {
@@ -104,19 +117,24 @@ public class OrderServiceImpl implements OrderService {
 			executor.shutdown();
 			order.setItems(orderItems);
 			order.setTotalCost(order.calculateTotalCost());
+
 			var savedOrder = orderRepository.save(order);
+			// Update saga state before publishing event
+			savedOrder.setSagaState(SagaState.STOCK_RESERVATION_PENDING);
+
 			orderItemRepository.saveAll(orderItems);
 
 			List<OrderItemPayload> itemPayloads = orderItems.stream()
 				.map(item -> new OrderItemPayload(item.getBookId(), item.getQuantity()))
 				.toList();
 
-			OrderMessage message = new OrderMessage(null, savedOrder.getId().toString(), user.getId(), user.getEmail(),
-					savedOrder.getTotalCost(), savedOrder.getPlacedDate(), itemPayloads);
+			OrderMessage message = new OrderMessage(null, sagaId, savedOrder.getId().toString(), user.getId(),
+					user.getEmail(), savedOrder.getTotalCost(), savedOrder.getPlacedDate(), itemPayloads);
 			outboxService.saveOrderCreatedEvent(savedOrder.getId().toString(), message);
 
 			// Record metrics
 			orderMetrics.incrementOrdersCreated();
+			sagaMetrics.incrementSagasStarted();
 			orderMetrics.recordOrderByStatus(savedOrder.getOrderStatus().name());
 			orderMetrics.recordRevenue(savedOrder.getTotalCost());
 
@@ -124,6 +142,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 		catch (Exception e) {
 			orderMetrics.incrementOrdersFailed();
+			sagaMetrics.incrementSagasFailed();
 			throw e;
 		}
 		finally {

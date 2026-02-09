@@ -71,9 +71,9 @@ public class OutboxRelayService {
 				logger.info("Publishing event ID: {}", event.getId());
 				// Inject the Outbox ID as the eventId for consumer idempotency
 				OrderMessage originalMessage = event.getPayload();
-				OrderMessage messageWithEventId = new OrderMessage(event.getId().toString(), originalMessage.orderId(),
-						originalMessage.userId(), originalMessage.email(), originalMessage.totalCost(),
-						originalMessage.placedAt(), originalMessage.items());
+				OrderMessage messageWithEventId = new OrderMessage(event.getId().toString(), originalMessage.sagaId(),
+						originalMessage.orderId(), originalMessage.userId(), originalMessage.email(),
+						originalMessage.totalCost(), originalMessage.placedAt(), originalMessage.items());
 
 				orderEventPublisher.publishOrderCreatedEvent(messageWithEventId);
 				event.setStatus(Outbox.EventStatus.SENT);
@@ -83,6 +83,7 @@ public class OutboxRelayService {
 				event.setStatus(Outbox.EventStatus.FAILED);
 			}
 		}
+		outboxRepository.saveAll(events);
 	}
 
 }
