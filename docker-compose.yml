@@ -182,6 +182,8 @@ services:
     depends_on:
       discovery-service:
         condition: service_healthy
+      config-server:
+        condition: service_healthy
       catalog-db:
         condition: service_healthy
       rabbitmq:
@@ -204,7 +206,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 20s
+      start_period: 45s
 
   user-service:
     build:
@@ -244,6 +246,8 @@ services:
     depends_on:
       discovery-service:
         condition: service_healthy
+      config-server:
+        condition: service_healthy
       checkout-db:
         condition: service_healthy
       otel-collector:
@@ -266,7 +270,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 20s
+      start_period: 45s
   notification-service:
     build:
       context: .
@@ -276,6 +280,8 @@ services:
       - "8400-8405:8084"
     depends_on:
       discovery-service:
+        condition: service_healthy
+      config-server:
         condition: service_healthy
       notification-db:
         condition: service_healthy
@@ -297,7 +303,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 20s
+      start_period: 45s
   # --- Monitoring ---
   jaeger:
     image: jaegertracing/all-in-one:latest
