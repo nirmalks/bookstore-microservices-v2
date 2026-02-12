@@ -92,6 +92,12 @@
 			<artifactId>shared-utils</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.redisson</groupId>
+					<artifactId>redisson-spring-boot-starter</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
         <dependency>
             <groupId>io.micrometer</groupId>

@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y wget && \
 ENV PATH="/opt/maven/bin:${PATH}"
 
 COPY pom.xml .
-
 COPY catalog-service/pom.xml catalog-service/
 COPY checkout-service/pom.xml checkout-service/
 COPY user-service/pom.xml user-service/
@@ -28,10 +27,10 @@ COPY shared-utils/src shared-utils/src
 RUN --mount=type=cache,target=/root/.m2 mvn clean install -DskipTests -pl shared-utils -am
 RUN --mount=type=cache,target=/root/.m2 mvn dependency:go-offline -B
 COPY . .
-RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests -pl catalog-service -am
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests -pl notification-service -am
 
 FROM eclipse-temurin:25-jre-noble
 WORKDIR /app
-ENV ARTIFACT_NAME=catalog-service
+ENV ARTIFACT_NAME=notification-service
 COPY --from=build /app/${ARTIFACT_NAME}/target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]

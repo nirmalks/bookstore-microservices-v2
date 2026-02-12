@@ -1,5 +1,16 @@
-FROM maven:3.9.9-eclipse-temurin-25-noble AS build
+# syntax=docker/dockerfile:1
+FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
+
+ARG MAVEN_VERSION=3.9.9
+RUN apt-get update && apt-get install -y wget && \
+    wget https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
+    tar -xzf apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
+    mv apache-maven-${MAVEN_VERSION} /opt/maven && \
+    rm apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+ENV PATH="/opt/maven/bin:${PATH}"
+
 COPY pom.xml .
 
 COPY catalog-service/pom.xml catalog-service/
@@ -14,10 +25,10 @@ COPY notification-service/pom.xml notification-service/
 
 COPY shared-utils/src shared-utils/src
 
-RUN mvn clean install -DskipTests -pl shared-utils -am
-RUN mvn dependency:go-offline -B
+RUN --mount=type=cache,target=/root/.m2 mvn clean install -DskipTests -pl shared-utils -am
+RUN --mount=type=cache,target=/root/.m2 mvn dependency:go-offline -B
 COPY . .
-RUN mvn clean package -DskipTests -pl auth-server -am
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests -pl auth-server -am
 
 FROM eclipse-temurin:25-jre-noble
 WORKDIR /app
