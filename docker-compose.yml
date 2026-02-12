@@ -93,6 +93,9 @@ services:
 
   # --- Microservices ---
   discovery-service:
+    build:
+      context: .
+      dockerfile: discovery-service/Dockerfile
     image: discovery-service:0.0.1-SNAPSHOT
     ports:
       - "8761:8761"

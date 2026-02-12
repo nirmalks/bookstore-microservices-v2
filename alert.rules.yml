@@ -252,3 +252,74 @@ groups:
         annotations:
           summary: "⚠️ High cache miss rate on {{ $labels.job }}"
           description: "Cache miss rate is {{ printf \"%.1f\" $value }}% - performance impact."
+
+  # ============================================================================
+  # NOTIFICATION SERVICE ALERTS
+  # Email delivery, duplicate events, processing latency
+  # ============================================================================
+  - name: notification-service
+    rules:
+      # --- Email Failure Rate ---
+      - alert: HighEmailFailureRate
+        expr: |
+          (
+            sum(rate(notifications_emails_failed_total[10m]))
+            /
+            (sum(rate(notifications_emails_sent_total[10m])) + sum(rate(notifications_emails_failed_total[10m])) + 0.001)
+          ) * 100 > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ High email notification failure rate"
+          description: "{{ printf \"%.1f\" $value }}% of email notifications are failing (threshold: 10%)."
+
+      - alert: CriticalEmailFailureRate
+        expr: |
+          (
+            sum(rate(notifications_emails_failed_total[10m]))
+            /
+            (sum(rate(notifications_emails_sent_total[10m])) + sum(rate(notifications_emails_failed_total[10m])) + 0.001)
+          ) * 100 > 25
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "🔴 Critical email notification failure rate"
+          description: "{{ printf \"%.1f\" $value }}% of email notifications are failing - customer impact!"
+
+      # --- No Notifications Anomaly ---
+      - alert: NoNotificationsProcessed
+        expr: sum(increase(notifications_events_received_total[30m])) == 0
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ No notifications processed in 30 minutes"
+          description: "Zero notification events received - possible RabbitMQ or upstream issue."
+
+      # --- High Duplicate Event Rate ---
+      - alert: HighDuplicateEventRate
+        expr: |
+          (
+            sum(rate(notifications_events_duplicates_skipped_total[10m]))
+            /
+            (sum(rate(notifications_events_received_total[10m])) + 0.001)
+          ) * 100 > 30
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ High duplicate event rate in notification-service"
+          description: "{{ printf \"%.1f\" $value }}% of events are duplicates - possible upstream retry storm."
+
+      # --- Slow Email Processing ---
+      - alert: SlowEmailProcessing
+        expr: histogram_quantile(0.99, sum(rate(notifications_email_processing_time_seconds_bucket[5m])) by (le)) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ Slow email processing in notification-service"
+          description: "P99 email processing time is {{ printf \"%.2f\" $value }}s (threshold: 5s)."
+

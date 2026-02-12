@@ -1,7 +1,7 @@
+# syntax=docker/dockerfile:1
 FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
 
-# Install Maven
 ARG MAVEN_VERSION=3.9.9
 RUN apt-get update && apt-get install -y wget && \
     wget https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
@@ -23,10 +23,10 @@ COPY config-server/pom.xml config-server/
 COPY notification-service/pom.xml notification-service/
 
 COPY shared-utils/src shared-utils/src
-RUN mvn clean install -DskipTests -pl shared-utils -am
-RUN mvn dependency:go-offline -B
+RUN --mount=type=cache,target=/root/.m2 mvn clean install -DskipTests -pl shared-utils -am
+RUN --mount=type=cache,target=/root/.m2 mvn dependency:go-offline -B
 COPY . .
-RUN mvn clean package -DskipTests -pl checkout-service -am
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests -pl checkout-service -am
 
 FROM eclipse-temurin:25-jre-noble
 WORKDIR /app
