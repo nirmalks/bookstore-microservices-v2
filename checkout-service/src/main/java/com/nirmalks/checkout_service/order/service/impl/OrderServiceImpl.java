@@ -31,6 +31,7 @@ import io.micrometer.core.instrument.Timer;
 import jakarta.transaction.Transactional;
 import locking.DistributedLockService;
 import locking.LockKeys;
+import logging.Auditable;
 import saga.SagaState;
 
 import org.slf4j.Logger;
@@ -92,6 +93,8 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	@Transactional
+	@Auditable(action = "CREATE_ORDER_DIRECT", resource = "ORDER", resourceId = "#result.order.id",
+			detail = "checkout direct order")
 	public OrderResponse createOrder(DirectOrderRequest directOrderRequest) {
 		Timer.Sample sample = orderMetrics.startOrderCreationTimer();
 		try {
@@ -151,6 +154,8 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
+	@Auditable(action = "CREATE_ORDER_FROM_CART", resource = "ORDER", resourceId = "#result.order.id",
+			detail = "checkout order from cart")
 	public OrderResponse createOrder(OrderFromCartRequest orderFromCartRequest) {
 		Cart cart = cartRepository.findById(orderFromCartRequest.getCartId())
 			.orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
@@ -192,6 +197,9 @@ public class OrderServiceImpl implements OrderService {
 		return orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 	}
 
+	@Override
+	@Auditable(action = "UPDATE_ORDER_STATUS", resource = "ORDER", resourceId = "#orderId",
+			detail = "manual order status update")
 	public void updateOrderStatus(Long orderId, OrderStatus status) {
 		Order order = orderRepository.findById(orderId)
 			.orElseThrow(() -> new IllegalArgumentException("Order not found"));
@@ -200,6 +208,8 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Transactional
+	@Auditable(action = "UPDATE_ORDER_STATUS_EVENT", resource = "ORDER", resourceId = "#orderIdString",
+			detail = "saga event order status update")
 	public void updateOrderStatusByEvent(String orderIdString, OrderStatus newStatus, String reason) {
 		String lockKey = LockKeys.orderStatus(orderIdString);
 

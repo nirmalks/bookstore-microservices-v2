@@ -7,6 +7,7 @@ import com.nirmalks.catalog_service.genre.entity.Genre;
 import com.nirmalks.catalog_service.genre.repository.GenreRepository;
 import dto.PageRequestDto;
 import exceptions.ResourceNotFoundException;
+import logging.Auditable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -22,12 +23,14 @@ public class GenreServiceImpl implements GenreService {
 	private GenreRepository genreRepository;
 
 	@Override
+	@Auditable(action = "CREATE_GENRE", resource = "GENRE", resourceId = "#result.id", detail = "catalog genre create")
 	public GenreDto createGenre(GenreRequest genreRequest) {
 		var genre = genreRepository.save(GenreMapper.toEntity(genreRequest));
 		return GenreMapper.toDto(genre);
 	}
 
 	@Override
+	@Auditable(action = "UPDATE_GENRE", resource = "GENRE", resourceId = "#id", detail = "catalog genre update")
 	public GenreDto updateGenre(Long id, GenreRequest genreRequest) {
 		var existingGenre = genreRepository.findById(id)
 			.orElseThrow(() -> new ResourceNotFoundException("genre not found"));
@@ -48,6 +51,7 @@ public class GenreServiceImpl implements GenreService {
 	}
 
 	@Override
+	@Auditable(action = "DELETE_GENRE", resource = "GENRE", resourceId = "#id", detail = "catalog genre delete")
 	public void deleteGenreById(Long id) {
 		genreRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("genre not found"));
 		genreRepository.deleteById(id);

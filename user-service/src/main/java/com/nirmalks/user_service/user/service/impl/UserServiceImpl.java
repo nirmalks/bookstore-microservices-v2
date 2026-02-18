@@ -15,6 +15,7 @@ import com.nirmalks.user_service.address.dto.AddressRequestWithUserId;
 import com.nirmalks.user_service.user.dto.UserDtoInternal;
 import dto.*;
 import exceptions.ResourceNotFoundException;
+import logging.Auditable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import security.JwtUtils;
 import jakarta.transaction.Transactional;
@@ -44,6 +45,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Auditable(action = "CREATE_USER", resource = "USER", resourceId = "#result.id", detail = "user registration")
 	public UserResponse createUser(CreateUserRequest userRequest, UserRole role) {
 		if (userRepository.findByUsername(userRequest.getUsername()).isPresent()) {
 			throw new IllegalArgumentException("Username already exists");
@@ -62,6 +64,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Auditable(action = "UPDATE_USER", resource = "USER", resourceId = "#id", detail = "user profile update")
 	public UserResponse updateUser(Long id, UpdateUserRequest userRequest) {
 		User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 		User updatedUser = userRepository.save(UserMapper.toEntity(user, userRequest));
@@ -69,12 +72,14 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Auditable(action = "DELETE_USER", resource = "USER", resourceId = "#userId", detail = "user delete")
 	public void deleteUser(Long userId) {
 		User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 		userRepository.deleteById(userId);
 	}
 
 	@Override
+	@Auditable(action = "USER_LOGIN", resource = "USER", resourceId = "#username", detail = "username/password login")
 	public LoginResponse authenticate(String username, String password) {
 		var user = userRepository.findByUsername(username)
 			.orElseThrow(() -> new ResourceNotFoundException("user not found"));
@@ -91,6 +96,8 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Auditable(action = "USER_LOGIN_INTERNAL", resource = "USER", resourceId = "#username",
+			detail = "internal auth login")
 	public UserDtoInternal internalAuthenticate(String username, String password) {
 		var user = userRepository.findByUsername(username)
 			.orElseThrow(() -> new ResourceNotFoundException("user not found"));
@@ -107,6 +114,8 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Auditable(action = "UPDATE_ADDRESS", resource = "USER_ADDRESS", resourceId = "#addressRequest.userId",
+			detail = "user address update")
 	public AddressDto updateAddress(AddressRequestWithUserId addressRequest) {
 		var user = userRepository.findById(addressRequest.getUserId())
 			.orElseThrow(() -> new ResourceNotFoundException("User not found"));

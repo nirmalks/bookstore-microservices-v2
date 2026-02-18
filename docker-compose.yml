@@ -225,12 +225,16 @@ services:
         condition: service_healthy
       user-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
       otel-collector:
         condition: service_started
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://user-db:5432/bookstore_user_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin123
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
     restart: on-failure
     healthcheck:
       test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8081'" ]
