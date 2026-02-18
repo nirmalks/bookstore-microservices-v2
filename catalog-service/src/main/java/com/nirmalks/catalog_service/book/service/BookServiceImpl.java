@@ -18,6 +18,7 @@ import exceptions.ResourceNotFoundException;
 import io.micrometer.core.instrument.Timer;
 import locking.DistributedLockService;
 import locking.LockKeys;
+import logging.Auditable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +80,7 @@ public class BookServiceImpl implements BookService {
 
 	@Override
 	@CacheEvict(value = { "books", "book" }, allEntries = true)
+	@Auditable(action = "CREATE_BOOK", resource = "BOOK", resourceId = "#result.id", detail = "catalog create")
 	public BookDto createBook(BookRequest bookRequest) {
 		var authors = authorService.getAuthorsByIds(bookRequest.getAuthorIds());
 		var genres = genreService.getGenresByIds(bookRequest.getGenreIds());
@@ -87,6 +89,7 @@ public class BookServiceImpl implements BookService {
 
 	@Override
 	@CacheEvict(value = { "books", "book" }, key = "#id")
+	@Auditable(action = "UPDATE_BOOK", resource = "BOOK", resourceId = "#id", detail = "catalog update")
 	public BookDto updateBook(Long id, BookRequest bookRequest) {
 		var existingBook = bookRepository.findById(id)
 			.orElseThrow(() -> new ResourceNotFoundException("book not found"));
@@ -97,6 +100,7 @@ public class BookServiceImpl implements BookService {
 
 	@Override
 	@CacheEvict(value = { "books", "book" }, key = "#id")
+	@Auditable(action = "DELETE_BOOK", resource = "BOOK", resourceId = "#id", detail = "catalog delete")
 	public void deleteBookById(Long id) {
 		bookRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("book not found"));
 		bookRepository.deleteById(id);
@@ -119,6 +123,7 @@ public class BookServiceImpl implements BookService {
 	}
 
 	@Override
+	@Auditable(action = "UPDATE_BOOK_STOCK", resource = "BOOK", resourceId = "#bookId", detail = "manual stock update")
 	public void updateBookStock(Long bookId, int quantity) {
 		var book = bookRepository.findById(bookId)
 			.orElseThrow(() -> new ResourceNotFoundException("Book not found with ID: " + bookId));
@@ -178,6 +183,7 @@ public class BookServiceImpl implements BookService {
 	@Override
 	@Transactional
 	@CacheEvict(value = { "books", "book" }, allEntries = true)
+	@Auditable(action = "RESERVE_STOCK", resource = "BOOK", resourceId = "#bookId", detail = "saga stock reservation")
 	public void reserveStock(Long bookId, int quantity) throws InsufficientStockException {
 		String lockKey = LockKeys.bookStock(bookId);
 
@@ -213,6 +219,7 @@ public class BookServiceImpl implements BookService {
 	@Override
 	@Transactional
 	@CacheEvict(value = { "books", "book" }, allEntries = true)
+	@Auditable(action = "RELEASE_STOCK", resource = "BOOK", resourceId = "#bookId", detail = "saga stock release")
 	public void releaseStock(Long bookId, int quantity) {
 		String lockKey = LockKeys.bookStock(bookId);
 

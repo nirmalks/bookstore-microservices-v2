@@ -12,6 +12,7 @@ import com.nirmalks.checkout_service.common.BookDto;
 import exceptions.ResourceNotFoundException;
 import locking.DistributedLockService;
 import locking.LockKeys;
+import logging.Auditable;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,8 @@ public class CartServiceImpl implements CartService {
 		return CartMapper.toResponse(cart);
 	}
 
+	@Override
+	@Auditable(action = "ADD_TO_CART", resource = "CART", resourceId = "#result.id", detail = "add item to cart")
 	public CartResponse addToCart(Long userId, CartItemRequest cartItemRequest) {
 		String lockKey = LockKeys.userCart(userId);
 
@@ -57,6 +60,8 @@ public class CartServiceImpl implements CartService {
 		});
 	}
 
+	@Override
+	@Auditable(action = "CLEAR_CART", resource = "CART", resourceId = "#userId", detail = "clear cart")
 	public void clearCart(Long userId) {
 		String lockKey = LockKeys.userCart(userId);
 
@@ -74,6 +79,8 @@ public class CartServiceImpl implements CartService {
 		return cartRepository.save(cart);
 	}
 
+	@Override
+	@Auditable(action = "REMOVE_CART_ITEM", resource = "CART_ITEM", resourceId = "#itemId", detail = "remove cart item")
 	public void removeItemFromCart(Long cartId, Long itemId) {
 		Cart cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 

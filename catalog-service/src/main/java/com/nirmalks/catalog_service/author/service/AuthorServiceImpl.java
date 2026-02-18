@@ -7,6 +7,7 @@ import com.nirmalks.catalog_service.author.entity.Author;
 import com.nirmalks.catalog_service.author.repository.AuthorRepository;
 import dto.PageRequestDto;
 import exceptions.ResourceNotFoundException;
+import logging.Auditable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,8 @@ public class AuthorServiceImpl implements AuthorService {
 	}
 
 	@Override
+	@Auditable(action = "CREATE_AUTHOR", resource = "AUTHOR", resourceId = "#result.id",
+			detail = "catalog author create")
 	public AuthorDto createAuthor(AuthorRequest authorRequest) {
 		Author author = AuthorMapper.toEntity(authorRequest);
 		Author savedAuthor = authorRepository.save(author);
@@ -33,6 +36,7 @@ public class AuthorServiceImpl implements AuthorService {
 	}
 
 	@Override
+	@Auditable(action = "UPDATE_AUTHOR", resource = "AUTHOR", resourceId = "#id", detail = "catalog author update")
 	public AuthorDto updateAuthor(Long id, AuthorRequest authorRequest) {
 		Author existingAuthor = authorRepository.findById(id)
 			.orElseThrow(() -> new ResourceNotFoundException("Author not found"));
@@ -53,6 +57,7 @@ public class AuthorServiceImpl implements AuthorService {
 	}
 
 	@Override
+	@Auditable(action = "DELETE_AUTHOR", resource = "AUTHOR", resourceId = "#id", detail = "catalog author delete")
 	public void deleteAuthorById(Long id) {
 		if (!authorRepository.existsById(id)) {
 			throw new ResourceNotFoundException("Author not found");
