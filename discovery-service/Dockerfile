@@ -22,6 +22,7 @@ COPY api-gateway/pom.xml api-gateway/
 COPY auth-server/pom.xml auth-server/
 COPY config-server/pom.xml config-server/
 COPY notification-service/pom.xml notification-service/
+COPY audit-service/pom.xml audit-service/
 
 COPY shared-utils/src shared-utils/src
 

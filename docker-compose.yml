@@ -64,6 +64,22 @@ services:
       timeout: 5s
       retries: 5
 
+  audit-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: bookstore_audit_service_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5437:5432"
+    volumes:
+      - audit-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d bookstore_audit_service_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   rabbitmq:
     image: rabbitmq:4-management
     container_name: rabbitmq-dev
@@ -311,6 +327,39 @@ services:
       timeout: 5s
       retries: 10
       start_period: 45s
+
+  audit-service:
+    build:
+      context: .
+      dockerfile: audit-service/Dockerfile
+    image: audit-service:0.0.1-SNAPSHOT
+    ports:
+      - "8500-8505:8085"
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      audit-db:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://audit-db:5432/bookstore_audit_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin123
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+    restart: on-failure
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8085'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+
   # --- Monitoring ---
   jaeger:
     image: jaegertracing/all-in-one:latest
@@ -390,3 +439,4 @@ volumes:
   rabbitmq-data:
   loki-data:
   notification-db-data:
+  audit-db-data:

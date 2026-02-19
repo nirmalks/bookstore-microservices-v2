@@ -48,12 +48,14 @@ public class AuditAspect {
 		try {
 			result = joinPoint.proceed();
 			return result;
-		} catch (Exception ex) {
+		}
+		catch (Exception ex) {
 			status = "FAILURE";
 			errorCode = ex.getClass().getSimpleName();
 			errorMessage = sanitize(ex.getMessage());
 			throw ex;
-		} finally {
+		}
+		finally {
 			try {
 				String resourceId = evalResourceId(auditable.resourceId(), joinPoint, result);
 				String principal = resolvePrincipal();
@@ -67,7 +69,8 @@ public class AuditAspect {
 
 				publisher.publish(event);
 				logger.info("Published audit event: {}", event);
-			} catch (Exception publishEx) {
+			}
+			catch (Exception publishEx) {
 				// Never fail business flow due to audit transport failure
 				logger.error("Audit publish failed: {}", publishEx.getMessage(), publishEx);
 			}
