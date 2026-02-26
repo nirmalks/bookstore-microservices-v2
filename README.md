@@ -21,6 +21,34 @@ User Capabilities
 * Add items to cart and place orders
 * View orders
 
+### starting the application 
+Because microservices require hashicorp vault to generate their database credentials on startup, **they will crash if Vault or the Databases are not fully initialized first.** 
+
+To prevent this "dependency hell", follow this exact sequence when starting the project from scratch:
+
+**Phase 1: Boot the Infrastructure**
+Start only Vault and the Databases first:
+```bash
+docker compose up -d vault user-db catalog-db checkout-db notification-db audit-db redis rabbitmq
+```
+*(Wait a few seconds for the databases to finish their initialization)*
+
+**Phase 2: Initialize Vault**
+Copy and execute your `init-vault.sh` script to create the static secrets and dynamic database roles:
+```bash
+# Copy the script inside the Vault container
+docker cp init-vault.sh vault:/tmp/init-vault.sh
+
+# Execute the script
+docker exec vault sh /tmp/init-vault.sh
+```
+
+**Phase 3: Boot the Microservices**
+Now that Vault is fully armed with the capability to generate PostgreSQL users, you can safely boot the rest of the Spring Boot applications:
+```bash
+docker compose up -d
+```
+
 ## credentials
 * admin cred - admin/admin123
 * customer cred - john_doe/admin123
