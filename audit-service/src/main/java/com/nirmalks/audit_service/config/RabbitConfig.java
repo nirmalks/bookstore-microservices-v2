@@ -31,4 +31,5 @@ public class RabbitConfig {
 		Binding auditBinding = BindingBuilder.bind(auditQueue).to(auditExchange).with("audit.event");
 		return new Declarables(auditQueue, auditExchange, auditBinding);
 	}
+
 }
