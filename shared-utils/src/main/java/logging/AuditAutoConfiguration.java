@@ -2,9 +2,9 @@ package logging;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
-import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.core.ExchangeBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -31,8 +31,8 @@ public class AuditAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(name = "auditExchange")
-	public TopicExchange auditExchange() {
-		return ExchangeBuilder.topicExchange(AUDIT_EXCHANGE).durable(true).build();
+	public DirectExchange auditExchange() {
+		return ExchangeBuilder.directExchange(AUDIT_EXCHANGE).durable(true).build();
 	}
 
 	@Bean
@@ -44,7 +44,7 @@ public class AuditAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(name = "auditBinding")
 	public Binding auditBinding() {
-		return BindingBuilder.bind(auditQueue()).to(auditExchange()).with("audit.#");
+		return BindingBuilder.bind(auditQueue()).to(auditExchange()).with(AUDIT_ROUTING_KEY);
 	}
 
 	@Bean
