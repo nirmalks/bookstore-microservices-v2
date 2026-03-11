@@ -26,10 +26,10 @@ COPY audit-service/pom.xml audit-service/
 
 COPY shared-utils/src shared-utils/src
 
-RUN --mount=type=cache,target=/root/.m2 mvn clean install -DskipTests -pl shared-utils -am
-RUN --mount=type=cache,target=/root/.m2 mvn dependency:go-offline -B
+RUN --mount=type=cache,target=/root/.m2,sharing=locked mvn clean install -DskipTests -pl shared-utils -am
+RUN --mount=type=cache,target=/root/.m2,sharing=locked mvn dependency:go-offline -B
 COPY . .
-RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests -pl auth-server -am
+RUN --mount=type=cache,target=/root/.m2,sharing=locked mvn clean package -DskipTests -pl auth-server -am
 
 FROM eclipse-temurin:25-jre-noble
 WORKDIR /app
