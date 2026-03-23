@@ -18,6 +18,7 @@ public class NotificationService {
 			Thread.sleep(2000);
 		}
 		catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 		}
 		logger.info("Email sent for {}", orderId);
 	}
