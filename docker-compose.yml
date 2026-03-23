@@ -425,6 +425,13 @@ services:
     environment:
       # Enable OTLP receiving in Jaeger's built-in collector
       - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=badger
+      - BADGER_EPHEMERAL=false
+      - BADGER_DIRECTORY=/badger
+      - BADGER_DIRECTORY_VALUE=/badger/data/traces
+      - BADGER_DIRECTORY_KEY=/badger/data/keys
+    volumes:
+      - jaeger-data:/badger/data
     restart: on-failure
 
   otel-collector:
@@ -446,6 +453,7 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - ./alert.rules.yml:/etc/prometheus/alert.rules.yml
+      - prometheus-data:/prometheus
     ports:
       - "9092:9090"
     depends_on:
@@ -526,3 +534,5 @@ volumes:
   loki-data:
   notification-db-data:
   audit-db-data:
+  prometheus-data:
+  jaeger-data:
