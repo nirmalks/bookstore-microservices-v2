@@ -1,7 +1,9 @@
 package com.nirmalks.bookstore.notification_service.idempotency.service;
 
 import com.nirmalks.bookstore.notification_service.idempotency.repository.ProcessedEventRepository;
+import com.nirmalks.bookstore.notification_service.metrics.IdempotencyCleanupMetrics;
 
+import io.micrometer.core.instrument.Timer;
 import locking.DistributedLockService;
 import locking.LockKeys;
 
@@ -30,15 +32,18 @@ public class ProcessedEventCleanupService {
 
 	private final DistributedLockService distributedLockService;
 
+	private final IdempotencyCleanupMetrics cleanupMetrics;
+
 	private final String cleanupLockKey;
 
 	@Value("${idempotency.cleanup.retention-days:7}")
 	private int retentionDays;
 
 	public ProcessedEventCleanupService(ProcessedEventRepository processedEventRepository,
-			DistributedLockService distributedLockService) {
+			DistributedLockService distributedLockService, IdempotencyCleanupMetrics cleanupMetrics) {
 		this.processedEventRepository = processedEventRepository;
 		this.distributedLockService = distributedLockService;
+		this.cleanupMetrics = cleanupMetrics;
 		this.cleanupLockKey = LockKeys.IDEMPOTENCY_CLEANUP_NOTIFICATION;
 	}
 
@@ -54,21 +59,29 @@ public class ProcessedEventCleanupService {
 				TimeUnit.SECONDS, () -> doCleanupOldEvents());
 
 		if (!executed) {
+			cleanupMetrics.incrementLockSkipped();
 			logger.debug("Cleanup skipped - another instance is running cleanup");
 		}
 	}
 
 	private void doCleanupOldEvents() {
+		Timer.Sample sample = cleanupMetrics.startCleanupTimer();
 		Instant cutoffTime = Instant.now().minus(retentionDays, ChronoUnit.DAYS);
 		logger.info("Starting processed events cleanup. Deleting events older than {} (retention: {} days)", cutoffTime,
 				retentionDays);
 
 		try {
 			long deletedCount = processedEventRepository.deleteByProcessedAtBefore(cutoffTime);
+			cleanupMetrics.incrementRuns();
+			cleanupMetrics.recordRowsDeleted(deletedCount);
 			logger.info("Processed events cleanup completed. Deleted {} old records", deletedCount);
 		}
 		catch (Exception e) {
+			cleanupMetrics.incrementFailures();
 			logger.error("Failed to cleanup processed events", e);
+		}
+		finally {
+			cleanupMetrics.stopCleanupTimer(sample);
 		}
 	}
 
