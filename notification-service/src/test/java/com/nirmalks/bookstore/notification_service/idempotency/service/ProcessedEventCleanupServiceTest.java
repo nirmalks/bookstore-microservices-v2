@@ -1,8 +1,10 @@
 package com.nirmalks.bookstore.notification_service.idempotency.service;
 
 import com.nirmalks.bookstore.notification_service.idempotency.repository.ProcessedEventRepository;
+import com.nirmalks.bookstore.notification_service.metrics.IdempotencyCleanupMetrics;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import io.micrometer.core.instrument.Timer;
 import locking.DistributedLockService;
 import locking.LockKeys;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +34,12 @@ class ProcessedEventCleanupServiceTest {
 	@Mock
 	private DistributedLockService distributedLockService;
 
+	@Mock
+	private IdempotencyCleanupMetrics cleanupMetrics;
+
+	@Mock
+	private Timer.Sample timerSample;
+
 	@InjectMocks
 	private ProcessedEventCleanupService cleanupService;
 
@@ -50,7 +58,7 @@ class ProcessedEventCleanupServiceTest {
 				runnable.run();
 				return true;
 			});
-
+		when(cleanupMetrics.startCleanupTimer()).thenReturn(timerSample);
 		when(processedEventRepository.deleteByProcessedAtBefore(any(Instant.class))).thenReturn(10L);
 
 		cleanupService.cleanupOldProcessedEvents();
@@ -61,6 +69,9 @@ class ProcessedEventCleanupServiceTest {
 		verify(distributedLockService).tryExecuteWithLock(eq(LockKeys.IDEMPOTENCY_CLEANUP_NOTIFICATION), eq(0L),
 				eq(300L), eq(TimeUnit.SECONDS), any(Runnable.class));
 		verify(processedEventRepository).deleteByProcessedAtBefore(cutoffCaptor.capture());
+		verify(cleanupMetrics).incrementRuns();
+		verify(cleanupMetrics).recordRowsDeleted(10L);
+		verify(cleanupMetrics).stopCleanupTimer(timerSample);
 
 		Instant capturedCutoff = cutoffCaptor.getValue();
 		assertFalse(capturedCutoff.isBefore(beforeInvocation.minusSeconds(TimeUnit.DAYS.toSeconds(7) + 1)));
@@ -78,6 +89,8 @@ class ProcessedEventCleanupServiceTest {
 		verify(distributedLockService).tryExecuteWithLock(eq(LockKeys.IDEMPOTENCY_CLEANUP_NOTIFICATION), eq(0L),
 				eq(300L), eq(TimeUnit.SECONDS), any(Runnable.class));
 		verify(processedEventRepository, never()).deleteByProcessedAtBefore(any(Instant.class));
+		verify(cleanupMetrics).incrementLockSkipped();
+		verify(cleanupMetrics, never()).startCleanupTimer();
 	}
 
 	@Test
@@ -89,6 +102,7 @@ class ProcessedEventCleanupServiceTest {
 				runnable.run();
 				return true;
 			});
+		when(cleanupMetrics.startCleanupTimer()).thenReturn(timerSample);
 		when(processedEventRepository.deleteByProcessedAtBefore(any(Instant.class)))
 			.thenThrow(new RuntimeException("cleanup failed"));
 
@@ -103,6 +117,8 @@ class ProcessedEventCleanupServiceTest {
 		}
 
 		verify(processedEventRepository).deleteByProcessedAtBefore(any(Instant.class));
+		verify(cleanupMetrics).incrementFailures();
+		verify(cleanupMetrics).stopCleanupTimer(timerSample);
 	}
 
 }

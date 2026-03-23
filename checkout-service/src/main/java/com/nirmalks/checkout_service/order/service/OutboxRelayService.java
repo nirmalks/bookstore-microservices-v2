@@ -1,9 +1,11 @@
 package com.nirmalks.checkout_service.order.service;
 
+import com.nirmalks.checkout_service.metrics.OutboxMetrics;
 import com.nirmalks.checkout_service.order.entity.Outbox;
 import com.nirmalks.checkout_service.order.messaging.OrderEventPublisher;
 import com.nirmalks.checkout_service.order.repository.OutboxRepository;
 import dto.OrderMessage;
+import io.micrometer.core.instrument.Timer;
 import locking.DistributedLockService;
 import locking.LockKeys;
 
@@ -31,15 +33,19 @@ public class OutboxRelayService {
 
 	private final TransactionTemplate transactionTemplate;
 
+	private final OutboxMetrics outboxMetrics;
+
 	@Value("${outbox.batch-size:10}")
 	private int batchSize;
 
 	public OutboxRelayService(OutboxRepository outboxRepository, OrderEventPublisher orderEventPublisher,
-			DistributedLockService distributedLockService, TransactionTemplate transactionTemplate) {
+			DistributedLockService distributedLockService, TransactionTemplate transactionTemplate,
+			OutboxMetrics outboxMetrics) {
 		this.outboxRepository = outboxRepository;
 		this.orderEventPublisher = orderEventPublisher;
 		this.distributedLockService = distributedLockService;
 		this.transactionTemplate = transactionTemplate;
+		this.outboxMetrics = outboxMetrics;
 	}
 
 	@Scheduled(fixedDelay = 2000)
@@ -52,38 +58,51 @@ public class OutboxRelayService {
 				});
 
 		if (!executed) {
+			outboxMetrics.incrementLockSkipped();
 			logger.debug("Outbox processing skipped - another instance is processing");
 		}
 	}
 
 	private void doProcessOutboxEvents() {
+		Timer.Sample sample = outboxMetrics.startProcessingTimer();
 		List<Outbox> events = outboxRepository.findByStatusOrderByCreatedAtAsc(Outbox.EventStatus.PENDING,
 				PageRequest.of(0, batchSize));
 
 		if (events.isEmpty()) {
+			outboxMetrics.stopProcessingTimer(sample);
 			return;
 		}
 
-		logger.info("Found {} pending outbox events. Processing...", events.size());
+		try {
+			outboxMetrics.incrementRuns();
+			outboxMetrics.recordBatchSize(events.size());
+			logger.info("Found {} pending outbox events. Processing...", events.size());
 
-		for (Outbox event : events) {
-			try {
-				logger.info("Publishing event ID: {}", event.getId());
-				// Inject the Outbox ID as the eventId for consumer idempotency
-				OrderMessage originalMessage = event.getPayload();
-				OrderMessage messageWithEventId = new OrderMessage(event.getId().toString(), originalMessage.sagaId(),
-						originalMessage.orderId(), originalMessage.userId(), originalMessage.email(),
-						originalMessage.totalCost(), originalMessage.placedAt(), originalMessage.items());
+			for (Outbox event : events) {
+				try {
+					logger.info("Publishing event ID: {}", event.getId());
+					// Inject the Outbox ID as the eventId for consumer idempotency
+					OrderMessage originalMessage = event.getPayload();
+					OrderMessage messageWithEventId = new OrderMessage(event.getId().toString(),
+							originalMessage.sagaId(), originalMessage.orderId(), originalMessage.userId(),
+							originalMessage.email(), originalMessage.totalCost(), originalMessage.placedAt(),
+							originalMessage.items());
 
-				orderEventPublisher.publishOrderCreatedEvent(messageWithEventId);
-				event.setStatus(Outbox.EventStatus.SENT);
+					orderEventPublisher.publishOrderCreatedEvent(messageWithEventId);
+					event.setStatus(Outbox.EventStatus.SENT);
+					outboxMetrics.incrementEventsSent();
+				}
+				catch (Exception e) {
+					logger.error("Failed to process outbox event ID: {}", event.getId(), e);
+					event.setStatus(Outbox.EventStatus.FAILED);
+					outboxMetrics.incrementEventsFailed();
+				}
 			}
-			catch (Exception e) {
-				logger.error("Failed to process outbox event ID: {}", event.getId(), e);
-				event.setStatus(Outbox.EventStatus.FAILED);
-			}
+			outboxRepository.saveAll(events);
 		}
-		outboxRepository.saveAll(events);
+		finally {
+			outboxMetrics.stopProcessingTimer(sample);
+		}
 	}
 
 }
