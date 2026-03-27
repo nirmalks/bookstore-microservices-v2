@@ -1,6 +1,26 @@
+x-java-service-defaults: &java-service-defaults
+  cpus: 1.25
+  mem_limit: 768m
+  environment:
+    JAVA_TOOL_OPTIONS: >-
+      -XX:InitialRAMPercentage=25
+      -XX:MinRAMPercentage=20
+      -XX:MaxRAMPercentage=60
+      -XX:+UseG1GC
+      -XX:+ExitOnOutOfMemoryError
+
+x-db-service-defaults: &db-service-defaults
+  cpus: 0.75
+  mem_limit: 384m
+
+x-monitoring-service-defaults: &monitoring-service-defaults
+  cpus: 0.50
+  mem_limit: 256m
+
 services:
   # --- Databases ---
   user-db:
+    <<: *db-service-defaults
     image: postgres:15
     environment:
       POSTGRES_DB: bookstore_user_service_db
@@ -18,6 +38,7 @@ services:
       start_period: 20s
 
   catalog-db:
+    <<: *db-service-defaults
     image: postgres:15
     environment:
       POSTGRES_DB: bookstore_catalog_service_db
@@ -35,6 +56,7 @@ services:
       start_period: 20s
 
   checkout-db:
+    <<: *db-service-defaults
     image: postgres:15
     environment:
       POSTGRES_DB: bookstore_checkout_service_db
@@ -52,6 +74,7 @@ services:
       start_period: 20s
 
   notification-db:
+    <<: *db-service-defaults
     image: postgres:15
     environment:
       POSTGRES_DB: bookstore_notification_service_db
@@ -69,6 +92,7 @@ services:
       start_period: 20s
 
   audit-db:
+    <<: *db-service-defaults
     image: postgres:15
     environment:
       POSTGRES_DB: bookstore_audit_service_db
@@ -86,6 +110,8 @@ services:
       start_period: 20s
 
   rabbitmq:
+    cpus: 1.00
+    mem_limit: 512m
     image: rabbitmq:4-management
     container_name: rabbitmq-dev
     ports:
@@ -104,6 +130,8 @@ services:
       start_period: 20s
 
   redis:
+    cpus: 0.50
+    mem_limit: 192m
     image: redis:7-alpine
     command: redis-server --requirepass redis_admin_pass
     ports:
@@ -116,6 +144,8 @@ services:
       start_period: 20s
 
   vault:
+    cpus: 0.50
+    mem_limit: 256m
     image: hashicorp/vault:1.15
     container_name: vault
     ports:
@@ -133,6 +163,7 @@ services:
       vault-cert-generator:
         condition: service_completed_successfully
   discovery-service:
+    <<: *java-service-defaults
     build:
       context: .
       dockerfile: discovery-service/Dockerfile
@@ -147,6 +178,7 @@ services:
       start_period: 20s
 
   config-server:
+    <<: *java-service-defaults
     build:
       context: .
       dockerfile: config-server/Dockerfile
@@ -164,6 +196,7 @@ services:
       start_period: 20s
 
   api-gateway:
+    <<: *java-service-defaults
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
@@ -193,6 +226,7 @@ services:
       - ./vault/approles:/vault/approles
       - ./vault/certs:/vault/certs
   auth-server:
+    <<: *java-service-defaults
     build:
       context: .
       dockerfile: auth-server/Dockerfile
@@ -211,6 +245,7 @@ services:
       vault-init:
         condition: service_completed_successfully
     environment:
+      - JAVA_TOOL_OPTIONS=-XX:InitialRAMPercentage=25 -XX:MinRAMPercentage=20 -XX:MaxRAMPercentage=60 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
       - SPRING_DATASOURCE_URL=jdbc:postgresql://user-db:5432/bookstore_user_service_db
     env_file:
       - ./vault/approles/auth-server.env
@@ -226,6 +261,7 @@ services:
       - ./vault/approles:/vault/approles
       - ./vault/certs:/vault/certs
   catalog-service:
+    <<: *java-service-defaults
     build:
       context: .
       dockerfile: catalog-service/Dockerfile
@@ -248,6 +284,7 @@ services:
       vault-init:
         condition: service_completed_successfully
     environment:
+      - JAVA_TOOL_OPTIONS=-XX:InitialRAMPercentage=25 -XX:MinRAMPercentage=20 -XX:MaxRAMPercentage=60 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
       - SPRING_DATASOURCE_URL=jdbc:postgresql://catalog-db:5432/bookstore_catalog_service_db
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
@@ -267,6 +304,7 @@ services:
       - ./vault/approles:/vault/approles
       - ./vault/certs:/vault/certs
   user-service:
+    <<: *java-service-defaults
     build:
       context: .
       dockerfile: user-service/Dockerfile
@@ -287,6 +325,7 @@ services:
       vault-init:
         condition: service_completed_successfully
     environment:
+      - JAVA_TOOL_OPTIONS=-XX:InitialRAMPercentage=25 -XX:MinRAMPercentage=20 -XX:MaxRAMPercentage=60 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
       - SPRING_DATASOURCE_URL=jdbc:postgresql://user-db:5432/bookstore_user_service_db
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
@@ -304,6 +343,7 @@ services:
       - ./vault/approles:/vault/approles
       - ./vault/certs:/vault/certs
   checkout-service:
+    <<: *java-service-defaults
     build:
       context: .
       dockerfile: checkout-service/Dockerfile
@@ -326,6 +366,7 @@ services:
       vault-init:
         condition: service_completed_successfully
     environment:
+      - JAVA_TOOL_OPTIONS=-XX:InitialRAMPercentage=25 -XX:MinRAMPercentage=20 -XX:MaxRAMPercentage=60 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
       - SPRING_DATASOURCE_URL=jdbc:postgresql://checkout-db:5432/bookstore_checkout_service_db
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
@@ -344,6 +385,7 @@ services:
       - ./vault/approles:/vault/approles
       - ./vault/certs:/vault/certs
   notification-service:
+    <<: *java-service-defaults
     build:
       context: .
       dockerfile: notification-service/Dockerfile
@@ -366,9 +408,12 @@ services:
       vault-init:
         condition: service_completed_successfully
     environment:
+      - JAVA_TOOL_OPTIONS=-XX:InitialRAMPercentage=25 -XX:MinRAMPercentage=20 -XX:MaxRAMPercentage=60 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
       - SPRING_DATASOURCE_URL=jdbc:postgresql://notification-db:5432/bookstore_notification_service_db
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+    env_file:
+      - ./vault/approles/notification-service.env
     restart: on-failure
     healthcheck:
       test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8084'" ]
@@ -381,6 +426,7 @@ services:
       - ./vault/approles:/vault/approles
       - ./vault/certs:/vault/certs
   audit-service:
+    <<: *java-service-defaults
     build:
       context: .
       dockerfile: audit-service/Dockerfile
@@ -401,9 +447,12 @@ services:
       vault-init:
         condition: service_completed_successfully
     environment:
+      - JAVA_TOOL_OPTIONS=-XX:InitialRAMPercentage=25 -XX:MinRAMPercentage=20 -XX:MaxRAMPercentage=60 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
       - SPRING_DATASOURCE_URL=jdbc:postgresql://audit-db:5432/bookstore_audit_service_db
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
+    env_file:
+      - ./vault/approles/audit-service.env
     restart: on-failure
     healthcheck:
       test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8085'" ]
@@ -417,6 +466,7 @@ services:
       - ./vault/approles:/vault/approles
       - ./vault/certs:/vault/certs
   jaeger:
+    <<: *monitoring-service-defaults
     image: jaegertracing/all-in-one:latest
     ports:
       - "16686:16686" # Jaeger UI
@@ -435,6 +485,7 @@ services:
     restart: on-failure
 
   otel-collector:
+    <<: *monitoring-service-defaults
     image: otel/opentelemetry-collector-contrib:latest
     command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
@@ -449,6 +500,8 @@ services:
     restart: on-failure
 
   prometheus:
+    cpus: 0.75
+    mem_limit: 512m
     image: prom/prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
@@ -461,6 +514,8 @@ services:
     restart: on-failure
 
   loki:
+    cpus: 0.75
+    mem_limit: 512m
     image: grafana/loki:latest
     ports:
       - "3100:3100"
@@ -470,6 +525,7 @@ services:
     restart: on-failure
 
   grafana:
+    <<: *monitoring-service-defaults
     image: grafana/grafana
     environment:
       - GF_SECURITY_ADMIN_USER=admin
@@ -478,6 +534,8 @@ services:
       - "3000:3000"
     volumes:
       - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./grafana/provisioning/dashboards/dashboard-provider.yml:/etc/grafana/provisioning/dashboards/dashboard-provider.yml
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       prometheus:
         condition: service_started
@@ -485,6 +543,7 @@ services:
         condition: service_started
 
   alertmanager:
+    <<: *monitoring-service-defaults
     image: prom/alertmanager
     ports:
       - "9093:9093"
@@ -496,6 +555,8 @@ services:
       - "--storage.path=/alertmanager"
 
   vault-init:
+    cpus: 0.50
+    mem_limit: 256m
     image: hashicorp/vault:1.15
     container_name: vault-init
     depends_on:
@@ -521,6 +582,8 @@ services:
       - VAULT_ADDR=https://vault:8200
       - VAULT_SKIP_VERIFY=true
   vault-cert-generator:
+    cpus: 0.25
+    mem_limit: 128m
     image: alpine
     container_name: vault-cert-generator
     volumes:
