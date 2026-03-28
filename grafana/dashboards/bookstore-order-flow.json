@@ -1,0 +1,136 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "reqps", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(http_server_requests_seconds_count{application=\"api-gateway\",uri=\"/api/v1/orders/direct\",method=\"POST\"}[5m]))",
+          "legendFormat": "gateway orders/direct req/s",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Gateway Direct Order Request Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ms", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 500 }, { "color": "red", "value": 1000 } ] } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "1000 * histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"api-gateway\",uri=\"/api/v1/orders/direct\",method=\"POST\"}[5m])))",
+          "legendFormat": "gateway orders/direct p95",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "1000 * (sum(rate(orders_creation_time_seconds_sum[5m])) / clamp_min(sum(rate(orders_creation_time_seconds_count[5m])), 0.001))",
+          "legendFormat": "checkout order creation avg",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Order Request And Creation Latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "id": 3,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "editorMode": "code", "expr": "sum(rate(orders_created_total[5m]))", "legendFormat": "orders created", "range": true, "refId": "A" },
+        { "editorMode": "code", "expr": "sum(rate(orders_failed_total[5m]))", "legendFormat": "orders failed", "range": true, "refId": "B" },
+        { "editorMode": "code", "expr": "sum(rate(orders_cancelled_total[5m]))", "legendFormat": "orders cancelled", "range": true, "refId": "C" }
+      ],
+      "title": "Order Outcome Rates",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "currencyUSD", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "id": 4,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "editorMode": "code", "expr": "sum(rate(orders_revenue_total[5m]))", "legendFormat": "revenue rate", "range": true, "refId": "A" },
+        { "editorMode": "code", "expr": "sum by (status) (rate(orders_by_status_total[5m]))", "legendFormat": "{{status}}", "range": true, "refId": "B" }
+      ],
+      "title": "Revenue And Order Status Rates",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "id": 5,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "editorMode": "code", "expr": "sum(rate(saga_started_total[5m]))", "legendFormat": "started", "range": true, "refId": "A" },
+        { "editorMode": "code", "expr": "sum(rate(saga_completed_total[5m]))", "legendFormat": "completed", "range": true, "refId": "B" },
+        { "editorMode": "code", "expr": "sum(rate(saga_compensated_total[5m]))", "legendFormat": "compensated", "range": true, "refId": "C" },
+        { "editorMode": "code", "expr": "sum(rate(saga_failed_total[5m]))", "legendFormat": "failed", "range": true, "refId": "D" }
+      ],
+      "title": "Saga Outcome Rates",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ms", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 500 }, { "color": "red", "value": 1500 } ] } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "id": 6,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "1000 * (sum(rate(saga_duration_seconds_sum[5m])) / clamp_min(sum(rate(saga_duration_seconds_count[5m])), 0.001))",
+          "legendFormat": "saga duration avg",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Saga Average Duration",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["bookstore", "performance", "orders"],
+  "templating": { "list": [] },
+  "time": { "from": "now-30m", "to": "now" },
+  "title": "Bookstore Order Flow",
+  "uid": "bookstore-order-flow",
+  "version": 1
+}

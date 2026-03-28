@@ -1,0 +1,96 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "editorMode": "code", "expr": "sum(rate(notifications_events_received_total[5m]))", "legendFormat": "events received", "range": true, "refId": "A" },
+        { "editorMode": "code", "expr": "sum(rate(notifications_events_duplicates_skipped_total[5m]))", "legendFormat": "duplicates skipped", "range": true, "refId": "B" },
+        { "editorMode": "code", "expr": "sum(rate(notifications_emails_sent_total[5m]))", "legendFormat": "emails sent", "range": true, "refId": "C" },
+        { "editorMode": "code", "expr": "sum(rate(notifications_emails_failed_total[5m]))", "legendFormat": "emails failed", "range": true, "refId": "D" }
+      ],
+      "title": "Notification Consumer Rates",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ms" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "editorMode": "code", "expr": "1000 * (sum(rate(notifications_email_processing_time_seconds_sum[5m])) / clamp_min(sum(rate(notifications_email_processing_time_seconds_count[5m])), 0.001))", "legendFormat": "email processing avg", "range": true, "refId": "A" }
+      ],
+      "title": "Notification Processing Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 3,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "editorMode": "code", "expr": "sum(rate(bookstore_idempotency_cleanup_runs_total[15m]))", "legendFormat": "cleanup runs", "range": true, "refId": "A" },
+        { "editorMode": "code", "expr": "sum(rate(bookstore_idempotency_cleanup_failed_total[15m]))", "legendFormat": "cleanup failed", "range": true, "refId": "B" },
+        { "editorMode": "code", "expr": "sum(rate(bookstore_idempotency_cleanup_lock_skipped_total[15m]))", "legendFormat": "cleanup lock skipped", "range": true, "refId": "C" }
+      ],
+      "title": "Cleanup Job Rates",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ms" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 4,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "editorMode": "code", "expr": "1000 * (sum(rate(bookstore_idempotency_cleanup_time_seconds_sum[15m])) / clamp_min(sum(rate(bookstore_idempotency_cleanup_time_seconds_count[15m])), 0.001))", "legendFormat": "cleanup avg", "range": true, "refId": "A" },
+        { "editorMode": "code", "expr": "sum(rate(bookstore_idempotency_cleanup_rows_deleted_sum[15m])) / clamp_min(sum(rate(bookstore_idempotency_cleanup_rows_deleted_count[15m])), 0.001)", "legendFormat": "rows deleted avg", "range": true, "refId": "B" }
+      ],
+      "title": "Cleanup Duration And Rows Deleted",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "id": 5,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "editorMode": "code", "expr": "sum by (type) (rate(notifications_emails_by_type_total[5m]))", "legendFormat": "{{type}}", "range": true, "refId": "A" }
+      ],
+      "title": "Notification Email Rate By Type",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["bookstore", "performance", "notification"],
+  "templating": { "list": [] },
+  "time": { "from": "now-30m", "to": "now" },
+  "title": "Bookstore Notification And Cleanup",
+  "uid": "bookstore-notification-cleanup",
+  "version": 1
+}
