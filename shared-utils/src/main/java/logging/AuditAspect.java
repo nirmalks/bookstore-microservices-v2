@@ -94,8 +94,14 @@ public class AuditAspect {
 			}
 		}
 		ctx.setVariable("result", result);
-		Object val = spel.parseExpression(expr).getValue(ctx);
-		return val == null ? "" : String.valueOf(val);
+		try {
+			Object val = spel.parseExpression(expr).getValue(ctx);
+			return val == null ? "" : String.valueOf(val);
+		}
+		catch (Exception ex) {
+			logger.debug("Could not evaluate audit resourceId expression '{}': {}", expr, ex.getMessage());
+			return "";
+		}
 	}
 
 	private String resolvePrincipal() {
