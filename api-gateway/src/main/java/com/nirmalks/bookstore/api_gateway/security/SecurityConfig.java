@@ -79,13 +79,21 @@ public class SecurityConfig {
 							.circuitBreaker(c -> c.setName("catalogCB").setFallbackUri("forward:/fallback/catalog")))
 						.uri("lb://catalog-service"))
 
-			// --- Checkout Service Route ---
-			.route("checkout-service-route",
+			// --- Checkout Service Read Route ---
+			.route("checkout-service-read-route",
 					r -> r.path("/api/v1/cart/**", "/api/v1/orders/**")
 						.and()
-						.method("GET", "POST", "PUT", "DELETE")
+						.method("GET")
 						.filters(f -> f.rewritePath("/api/v1/(?<segment>.*)", "/api/v1/${segment}")
 							.circuitBreaker(c -> c.setName("checkoutCB").setFallbackUri("forward:/fallback/checkout")))
+						.uri("lb://checkout-service"))
+
+			// --- Checkout Service Write Route ---
+			.route("checkout-service-write-route",
+					r -> r.path("/api/v1/cart/**", "/api/v1/orders/**")
+						.and()
+						.method("POST", "PUT", "DELETE")
+						.filters(f -> f.rewritePath("/api/v1/(?<segment>.*)", "/api/v1/${segment}"))
 						.uri("lb://checkout-service"))
 
 			// auth server route

@@ -47,6 +47,11 @@ These scripts are parameterized through environment variables:
   - write-heavy traffic against direct order creation
   - useful for checkout, outbox, catalog consumer, and notification paths
 
+- `checkout-order-flow-stress.js`
+  - stronger version of the direct-order scenario
+  - use this only after the baseline run is healthy
+  - intended to find the first real bottleneck instead of tuning speculatively
+
 ## Example Commands
 
 Run smoke flow:
@@ -73,6 +78,12 @@ Run order baseline:
 k6 run -e BASE_URL=http://localhost:8080 -e USER_ID=1 -e BOOK_ID=1 perf/checkout-order-flow.js
 ```
 
+Run stronger checkout stress:
+
+```bash
+k6 run -e BASE_URL=http://localhost:8080 -e USER_ID=1 -e BOOK_ID=1 perf/checkout-order-flow-stress.js
+```
+
 ## What To Record After Each Run
 
 - start time and git commit
@@ -82,6 +93,24 @@ k6 run -e BASE_URL=http://localhost:8080 -e USER_ID=1 -e BOOK_ID=1 perf/checkout
 - p50, p95, p99 latency
 - error rate
 - Grafana screenshots for order, outbox, inventory, and notification panels
+
+## Suggested Progression
+
+Use the scripts in this order:
+
+1. `smoke-order-flow.js`
+2. `books-browse.js`
+3. `checkout-order-flow.js`
+4. `checkout-order-flow-stress.js`
+
+If the baseline scripts stay healthy and Grafana shows no visible lag, do not optimize yet. Move to the stress script and look for the first real signal:
+
+- sharp p95 growth
+- request failures
+- outbox lag
+- consumer lag
+- retry spikes
+- circuit breaker activity
 
 ## Notes
 

@@ -68,6 +68,22 @@ class AuditAspectTest {
 		assertEquals("IllegalStateException", event.errorCode());
 	}
 
+	@Test
+	void publishesFailureEventWhenResultExpressionCannotBeResolved() {
+		TestService proxy = proxied(new TestService());
+
+		assertThrows(IllegalStateException.class, () -> proxy.failWithResultExpression(11L));
+
+		ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
+		verify(publisher, times(1)).publish(captor.capture());
+		AuditEvent event = captor.getValue();
+
+		assertEquals("FAILURE", event.status());
+		assertEquals("FAIL_ORDER", event.action());
+		assertEquals("", event.resourceId());
+		assertEquals("IllegalStateException", event.errorCode());
+	}
+
 	private TestService proxied(TestService target) {
 		AspectJProxyFactory factory = new AspectJProxyFactory(target);
 		factory.addAspect(new AuditAspect(publisher, props));
@@ -83,6 +99,11 @@ class AuditAspectTest {
 
 		@Auditable(action = "FAIL_BOOK", resource = "BOOK", resourceId = "#id", detail = "fail")
 		void fail(Long id) {
+			throw new IllegalStateException("boom");
+		}
+
+		@Auditable(action = "FAIL_ORDER", resource = "ORDER", resourceId = "#result.order.id", detail = "fail")
+		void failWithResultExpression(Long id) {
 			throw new IllegalStateException("boom");
 		}
 
