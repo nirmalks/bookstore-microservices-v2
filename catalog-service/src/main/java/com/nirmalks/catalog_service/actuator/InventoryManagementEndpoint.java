@@ -4,6 +4,7 @@ import com.nirmalks.catalog_service.book.repository.BookRepository;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import java.util.Map;
  */
 @Component
 @Endpoint(id = "inventory")
+@ConditionalOnBean(BookRepository.class)
 public class InventoryManagementEndpoint {
 
 	private final BookRepository bookRepository;
