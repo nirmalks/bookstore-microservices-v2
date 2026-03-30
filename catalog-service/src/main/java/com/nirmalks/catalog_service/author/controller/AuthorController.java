@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
@@ -23,9 +24,7 @@ import java.net.URI;
 @RestController
 @RequestMapping("/api/v1/authors")
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "Author Management", description = "Operations related to authors in the Bookstore API") // Add
-																										// this
-																										// annotation
+@Tag(name = "Author Management", description = "Operations related to authors in the Bookstore API")
 public class AuthorController {
 
 	@Autowired
@@ -52,11 +51,11 @@ public class AuthorController {
 	@Operation(summary = "Create a new author", description = "Accessible by ADMIN role only")
 	@ApiResponses(value = { @ApiResponse(responseCode = "201", description = "Author created successfully"),
 			@ApiResponse(responseCode = "400", description = "Invalid input") })
-	public ResponseEntity<AuthorDto> createAuthor(@RequestBody AuthorRequest authorRequest) {
+	public ResponseEntity<AuthorDto> createAuthor(@Valid @RequestBody AuthorRequest authorRequest) {
 		var author = authorService.createAuthor(authorRequest);
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest()
 			.path("/{id}")
-			.buildAndExpand(author.getId())
+			.buildAndExpand(author.id())
 			.toUri();
 		return ResponseEntity.status(HttpStatus.CREATED)
 			.header(HttpHeaders.LOCATION, String.valueOf(location))
@@ -68,7 +67,7 @@ public class AuthorController {
 			@ApiResponse(responseCode = "400", description = "Invalid input") })
 	@PreAuthorize("hasRole('ADMIN')")
 	@PutMapping("/{id}")
-	public AuthorDto updateAuthor(@PathVariable Long id, @RequestBody AuthorRequest authorRequest) {
+	public AuthorDto updateAuthor(@PathVariable Long id, @Valid @RequestBody AuthorRequest authorRequest) {
 		return authorService.updateAuthor(id, authorRequest);
 	}
 
@@ -79,7 +78,7 @@ public class AuthorController {
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deleteAuthor(@PathVariable Long id) {
 		authorService.deleteAuthorById(id);
-		return ResponseEntity.status(HttpStatus.OK).build();
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 	}
 
 }

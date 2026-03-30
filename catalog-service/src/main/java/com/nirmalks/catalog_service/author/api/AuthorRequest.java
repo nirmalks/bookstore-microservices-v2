@@ -4,10 +4,10 @@ import jakarta.validation.constraints.NotNull;
 
 public class AuthorRequest {
 
-	@NotNull
+	@NotNull(message = "Name is required")
 	private String name;
 
-	@NotNull
+	@NotNull(message = "Bio is required")
 	private String bio;
 
 	public String getName() {

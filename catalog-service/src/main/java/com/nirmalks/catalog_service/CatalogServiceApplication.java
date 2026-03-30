@@ -4,11 +4,14 @@ import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import locking.DistributedLockService;
+import locking.RedissonConfig;
+
 @SpringBootApplication
-@ComponentScan(basePackages = { "com.nirmalks.catalog_service", "locking" })
+@Import({ RedissonConfig.class, DistributedLockService.class })
 @EnableDiscoveryClient
 @EnableRabbit
 @EnableScheduling

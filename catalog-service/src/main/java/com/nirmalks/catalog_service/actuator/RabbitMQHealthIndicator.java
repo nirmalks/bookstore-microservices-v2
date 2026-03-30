@@ -3,6 +3,7 @@ package com.nirmalks.catalog_service.actuator;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
  * broker availability
  */
 @Component
+@ConditionalOnBean(RabbitTemplate.class)
 public class RabbitMQHealthIndicator implements HealthIndicator {
 
 	private final RabbitTemplate rabbitTemplate;

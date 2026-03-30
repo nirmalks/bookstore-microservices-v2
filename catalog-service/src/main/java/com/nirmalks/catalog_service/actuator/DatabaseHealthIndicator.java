@@ -2,6 +2,7 @@ package com.nirmalks.catalog_service.actuator;
 
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -14,6 +15,7 @@ import java.sql.Statement;
  * connection pool status and query response time
  */
 @Component
+@ConditionalOnBean(DataSource.class)
 public class DatabaseHealthIndicator implements HealthIndicator {
 
 	private final DataSource dataSource;
