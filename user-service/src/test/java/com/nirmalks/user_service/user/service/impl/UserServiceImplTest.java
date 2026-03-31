@@ -69,6 +69,8 @@ class UserServiceImplTest {
 
 	private UpdateUserRequest updateRequest;
 
+	private PageRequestDto pageRequestDto;
+
 	@BeforeEach
 	void setUp() {
 		sampleUser = new User();
@@ -87,15 +89,12 @@ class UserServiceImplTest {
 		updateRequest.setPassword("updatedPassword");
 		updateRequest.setEmail("updated@ex.com");
 		updateRequest.setRole(UserRole.ADMIN);
+
+		pageRequestDto = new PageRequestDto(0, 10, "id", "asc");
 	}
 
 	@Test
 	void getUsers_returns_user_info_with_pagination() {
-		PageRequestDto pageRequestDto = new PageRequestDto();
-		pageRequestDto.setPage(0);
-		pageRequestDto.setSize(10);
-		pageRequestDto.setSortOrder("asc");
-		pageRequestDto.setSortKey("id");
 
 		Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
 		Page<User> userPage = new PageImpl<>(List.of(sampleUser), pageable, 1);

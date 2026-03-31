@@ -47,6 +47,8 @@ class AuthorServiceImplTest {
 
 	private AuthorRequest authorRequest;
 
+	private PageRequestDto pageRequestDto;
+
 	@BeforeEach
 	void setUp() {
 		author = new Author();
@@ -57,6 +59,8 @@ class AuthorServiceImplTest {
 		authorRequest = new AuthorRequest();
 		authorRequest.setName("John Doe");
 		authorRequest.setBio("some bio");
+
+		pageRequestDto = new PageRequestDto(0, 10, "id", "asc");
 	}
 
 	@Test
@@ -109,11 +113,7 @@ class AuthorServiceImplTest {
 
 	@Test
 	void getAllAuthors_will_return_valid_author_dto_page() {
-		PageRequestDto pageRequestDto = new PageRequestDto();
-		pageRequestDto.setPage(0);
-		pageRequestDto.setSize(10);
-		pageRequestDto.setSortOrder("asc");
-		pageRequestDto.setSortKey("id");
+
 		Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
 		when(authorRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(author)));
 		var result = authorService.getAllAuthors(pageRequestDto);
