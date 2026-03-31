@@ -8,14 +8,17 @@ import com.nirmalks.catalog_service.book.dto.BookMapper;
 import com.nirmalks.catalog_service.book.entity.Book;
 import com.nirmalks.catalog_service.book.repository.BookRepository;
 import com.nirmalks.catalog_service.genre.service.GenreService;
+import com.nirmalks.catalog_service.idempotency.repository.ProcessedEventRepository;
 import com.nirmalks.catalog_service.metrics.BookMetrics;
 import common.RequestUtils;
 import common.RestPage;
+import com.nirmalks.catalog_service.idempotency.entity.ProcessedEvent;
 import dto.OrderMessage;
 import dto.PageRequestDto;
 import exceptions.InsufficientStockException;
 import exceptions.ResourceNotFoundException;
 import io.micrometer.core.instrument.Timer;
+import jakarta.validation.Valid;
 import locking.DistributedLockService;
 import locking.LockKeys;
 import logging.Auditable;
@@ -33,6 +36,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.concurrent.TimeUnit;
 
@@ -53,6 +57,9 @@ public class BookServiceImpl implements BookService {
 
 	@Autowired
 	private DistributedLockService distributedLockService;
+
+	@Autowired
+	private ProcessedEventRepository processedEventRepository;
 
 	private final Logger logger = LoggerFactory.getLogger(BookServiceImpl.class);
 
@@ -220,16 +227,27 @@ public class BookServiceImpl implements BookService {
 	@Transactional
 	@CacheEvict(value = { "books", "book" }, allEntries = true)
 	@Auditable(action = "RELEASE_STOCK", resource = "BOOK", resourceId = "#bookId", detail = "saga stock release")
-	public void releaseStock(Long bookId, int quantity) {
+	public void releaseStock(String sagaId, Long bookId, int quantity) {
 		String lockKey = LockKeys.bookStock(bookId);
 
 		distributedLockService.executeWithLock(lockKey, 5, 30, TimeUnit.SECONDS, () -> {
+
+			// 1. Check if this sagaId was already released
+			String idempotencyKey = "release-" + sagaId + "-" + bookId;
+			if (processedEventRepository.existsByEventId(idempotencyKey)) {
+				logger.info("Stock already released for sagaId: {}, bookId: {}. Skipping.", sagaId, bookId);
+				return;
+			}
+
 			int rowsUpdated = bookRepository.incrementStock(bookId, quantity);
 
 			if (rowsUpdated == 0) {
 				logger.warn("Failed to release stock for book {} - book may not exist", bookId);
 				return;
 			}
+
+			// 2. Mark as processed
+			processedEventRepository.save(new ProcessedEvent(idempotencyKey, "STOCK_RELEASED", Instant.now()));
 
 			bookMetrics.incrementStockReleased();
 			logger.info("Released {} units of book {} (compensation)", quantity, bookId);

@@ -43,7 +43,7 @@ public class StockReleaseConsumer {
 
 			for (StockReservation.ReservedItem item : reservation.getReservedItems()) {
 				try {
-					bookService.releaseStock(item.bookId(), item.quantity());
+					bookService.releaseStock(sagaId, item.bookId(), item.quantity());
 					logger.info("Released {} units of book {} for saga {}", item.quantity(), item.bookId(), sagaId);
 				}
 				catch (Exception e) {

@@ -43,6 +43,6 @@ public interface BookService {
 	/**
 	 * Release previously reserved stock. Used for saga compensation.
 	 */
-	void releaseStock(Long bookId, int quantity);
+	void releaseStock(String sagaId, Long bookId, int quantity);
 
 }

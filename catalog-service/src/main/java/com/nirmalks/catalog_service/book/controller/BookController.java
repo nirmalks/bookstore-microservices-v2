@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,13 +19,18 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/v1/books")
+@Validated
 @SecurityRequirement(name = "bearerAuth") // Added for consistency with AuthorController
 @Tag(name = "Book Management", description = "Operations related to books in the Bookstore API") // Added
 																									// Tag
@@ -45,7 +52,7 @@ public class BookController {
 			description = "Returns book details for a given book ID. Accessible by all users.")
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Book found"),
 			@ApiResponse(responseCode = "404", description = "Book not found") })
-	public BookDto getBookById(@PathVariable Long id) {
+	public BookDto getBookById(@PathVariable @Positive(message = "Book ID must be positive") Long id) {
 		return bookService.getBookById(id);
 	}
 
@@ -54,12 +61,9 @@ public class BookController {
 	@Operation(summary = "Create a new book", description = "Creates a new book. Accessible by ADMIN role only.")
 	@ApiResponses(value = { @ApiResponse(responseCode = "201", description = "Book created successfully"),
 			@ApiResponse(responseCode = "400", description = "Invalid input") })
-	public ResponseEntity<BookDto> createBook(@RequestBody BookRequest BookRequest) {
+	public ResponseEntity<BookDto> createBook(@RequestBody @Valid BookRequest BookRequest) {
 		var Book = bookService.createBook(BookRequest);
-		var location = ServletUriComponentsBuilder.fromCurrentRequest()
-			.path("/{id}")
-			.buildAndExpand(Book.getId())
-			.toUri();
+		var location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(Book.id()).toUri();
 		return ResponseEntity.status(HttpStatus.CREATED)
 			.header(HttpHeaders.LOCATION, String.valueOf(location))
 			.body(Book);
@@ -72,7 +76,8 @@ public class BookController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Book updated successfully"),
 			@ApiResponse(responseCode = "400", description = "Invalid input"),
 			@ApiResponse(responseCode = "404", description = "Book not found") })
-	public BookDto updateBook(@PathVariable Long id, @RequestBody BookRequest BookRequest) {
+	public BookDto updateBook(@PathVariable @Positive(message = "Book ID must be positive") Long id,
+			@RequestBody @Valid BookRequest BookRequest) {
 		return bookService.updateBook(id, BookRequest);
 	}
 
@@ -81,9 +86,9 @@ public class BookController {
 	@Operation(summary = "Delete a book", description = "Deletes a book by ID. Accessible by ADMIN role only.")
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Book deleted successfully"),
 			@ApiResponse(responseCode = "404", description = "Book not found") })
-	public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
+	public ResponseEntity<Void> deleteBook(@PathVariable @Positive(message = "Book ID must be positive") Long id) {
 		bookService.deleteBookById(id);
-		return ResponseEntity.status(HttpStatus.OK).build();
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 	}
 
 	@GetMapping("/genre/{name}")
@@ -92,7 +97,10 @@ public class BookController {
 	@ApiResponses(
 			value = { @ApiResponse(responseCode = "200", description = "List of books by genre returned successfully"),
 					@ApiResponse(responseCode = "404", description = "Genre not found") })
-	public Page<BookDto> getBookByGenre(@PathVariable String name, PageRequestDto pageRequestDto) {
+	public Page<BookDto> getBookByGenre(
+			@PathVariable(required = false) @NotBlank(message = "Genre name cannot be blank") @Size(min = 1,
+					max = 100) String name,
+			PageRequestDto pageRequestDto) {
 		return bookService.getBooksByGenre(name, pageRequestDto);
 	}
 
@@ -102,7 +110,8 @@ public class BookController {
 	@ApiResponses(
 			value = { @ApiResponse(responseCode = "200", description = "List of books by author returned successfully"),
 					@ApiResponse(responseCode = "404", description = "Author not found") })
-	public Page<BookDto> getBookByAuthor(@PathVariable Long id, PageRequestDto pageRequestDto) {
+	public Page<BookDto> getBookByAuthor(@PathVariable @Positive(message = "Author ID must be positive") Long id,
+			PageRequestDto pageRequestDto) {
 		return bookService.getBooksByAuthor(id, pageRequestDto);
 	}
 

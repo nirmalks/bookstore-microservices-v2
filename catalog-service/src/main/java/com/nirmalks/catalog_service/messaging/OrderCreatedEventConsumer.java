@@ -101,7 +101,7 @@ public class OrderCreatedEventConsumer {
 				}
 				else {
 					// Compensate already reserved items
-					compensateReservedItems(reservedItems);
+					compensateReservedItems(sagaId, reservedItems);
 					if (!reservedItems.isEmpty()) {
 						bookMetrics.incrementInventoryCompensations();
 					}
@@ -113,7 +113,7 @@ public class OrderCreatedEventConsumer {
 			}
 			catch (Exception e) {
 				logger.error("Error processing order for saga: {}", sagaId, e);
-				compensateReservedItems(reservedItems);
+				compensateReservedItems(sagaId, reservedItems);
 				if (!reservedItems.isEmpty()) {
 					bookMetrics.incrementInventoryCompensations();
 				}
@@ -134,10 +134,10 @@ public class OrderCreatedEventConsumer {
 		stockReservationRepository.save(reservation);
 	}
 
-	private void compensateReservedItems(List<StockReservationSuccessEvent.ReservedItem> reservedItems) {
+	private void compensateReservedItems(String sagaId, List<StockReservationSuccessEvent.ReservedItem> reservedItems) {
 		for (StockReservationSuccessEvent.ReservedItem reserved : reservedItems) {
 			try {
-				bookService.releaseStock(reserved.bookId(), reserved.quantity());
+				bookService.releaseStock(sagaId, reserved.bookId(), reserved.quantity());
 			}
 			catch (Exception compensationError) {
 				logger.error("Compensation failed for book {}: {}", reserved.bookId(), compensationError.getMessage());
