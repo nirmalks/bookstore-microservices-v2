@@ -1,10 +1,12 @@
 package com.nirmalks.bookstore.auth_server.security;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationGrantAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 
+import java.util.Collection;
 import java.util.Map;
 
 public class OAuth2PasswordAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken {
@@ -31,8 +33,20 @@ public class OAuth2PasswordAuthenticationToken extends OAuth2AuthorizationGrantA
 		return clientPrincipal;
 	}
 
+	@Override
 	public Map<String, Object> getAdditionalParameters() {
 		return additionalParameters;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Collection<GrantedAuthority> getAuthorities() {
+		return (Collection<GrantedAuthority>) clientPrincipal.getAuthorities();
+	}
+
+	@Override
+	public Object getDetails() {
+		return clientPrincipal.getDetails();
 	}
 
 }
