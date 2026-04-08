@@ -24,6 +24,10 @@ public class PasswordAuthenticationConverter implements AuthenticationConverter 
 		}
 		Authentication clientPrincipal = (Authentication) request.getUserPrincipal();
 
+		if (clientPrincipal == null) {
+			return null;
+		}
+
 		String clientId = clientPrincipal.getName();
 
 		RegisteredClient registeredClient = registeredClientRepository.findByClientId(clientId);

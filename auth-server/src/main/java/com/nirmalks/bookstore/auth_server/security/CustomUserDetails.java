@@ -41,8 +41,6 @@ public class CustomUserDetails implements UserDetails {
 		return username;
 	}
 
-	// All other methods from the UserDetails interface are also included
-	// and can be implemented based on your needs.
 	@Override
 	public boolean isAccountNonExpired() {
 		return true;
