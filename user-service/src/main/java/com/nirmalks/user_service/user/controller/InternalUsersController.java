@@ -28,11 +28,10 @@ public class InternalUsersController {
 
 	@PostMapping("/auth")
 	public ResponseEntity<UserDtoInternal> internalAuth(@RequestBody LoginRequest loginRequest) {
-		Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+		Authentication authentication = authenticationManager
+			.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.username(), loginRequest.password()));
 		if (authentication.isAuthenticated()) {
-			UserDtoInternal user = userService.internalAuthenticate(loginRequest.getUsername(),
-					loginRequest.getPassword());
+			UserDtoInternal user = userService.internalAuthenticate(loginRequest.username(), loginRequest.password());
 			return ResponseEntity.ok(user);
 		}
 		throw new BadCredentialsException("Invalid credentials");

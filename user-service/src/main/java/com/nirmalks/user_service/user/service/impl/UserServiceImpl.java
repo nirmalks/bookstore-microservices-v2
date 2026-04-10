@@ -105,12 +105,7 @@ public class UserServiceImpl implements UserService {
 		if (!SecurityUtils.matches(password, user.getPassword(), passwordEncoder)) {
 			throw new IllegalArgumentException("Invalid username or password");
 		}
-		UserDtoInternal userDto = new UserDtoInternal();
-		userDto.setUsername(user.getUsername());
-		userDto.setHashedPassword(user.getPassword());
-		userDto.setRole(user.getRole());
-		userDto.setId(user.getId());
-		return userDto;
+		return new UserDtoInternal(user.getId(), user.getUsername(), user.getPassword(), user.getRole());
 	}
 
 	@Override
