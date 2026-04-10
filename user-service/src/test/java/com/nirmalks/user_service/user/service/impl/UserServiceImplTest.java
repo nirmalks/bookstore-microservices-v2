@@ -270,10 +270,10 @@ class UserServiceImplTest {
 		UserDtoInternal response = userService.internalAuthenticate("testuser", "rawPassword");
 
 		assertNotNull(response);
-		assertEquals("testuser", response.getUsername());
-		assertEquals("encodedPassword", response.getHashedPassword());
-		assertEquals(UserRole.CUSTOMER, response.getRole());
-		assertEquals(1L, response.getId());
+		assertEquals("testuser", response.username());
+		assertEquals("encodedPassword", response.hashedPassword());
+		assertEquals(UserRole.CUSTOMER, response.role());
+		assertEquals(1L, response.id());
 	}
 
 	@Test

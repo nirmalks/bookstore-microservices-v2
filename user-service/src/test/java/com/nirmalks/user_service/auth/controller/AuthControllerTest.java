@@ -58,9 +58,7 @@ class AuthControllerTest {
 
 	@BeforeEach
 	void setUp() {
-		loginRequest = new LoginRequest();
-		loginRequest.setUsername("testuser");
-		loginRequest.setPassword("password");
+		loginRequest = new LoginRequest("testuser", "password");
 
 		loginResponse = new LoginResponse();
 		loginResponse.setToken("mocked-jwt-token");
@@ -113,9 +111,7 @@ class AuthControllerTest {
 
 	@Test
 	void login_returns_400_bad_request_when_login_request_is_invalid() throws Exception {
-		LoginRequest invalidRequest = new LoginRequest();
-		invalidRequest.setUsername("");
-		invalidRequest.setPassword("");
+		LoginRequest invalidRequest = new LoginRequest("", "");
 
 		mockMvc
 			.perform(post("/api/v1/login").with(csrf())

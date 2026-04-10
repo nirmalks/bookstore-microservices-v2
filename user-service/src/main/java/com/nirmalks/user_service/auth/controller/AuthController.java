@@ -21,8 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1")
-@Tag(name = "Authentication", description = "User login and authentication operations") // Added
-																						// Tag
+@Tag(name = "Authentication", description = "User login and authentication operations")
 public class AuthController {
 
 	@Autowired
@@ -33,16 +32,14 @@ public class AuthController {
 
 	@PostMapping("/login")
 	@Operation(summary = "User login",
-			description = "Authenticates a user and returns a JWT token upon successful login.") // Added
-																									// Operation
+			description = "Authenticates a user and returns a JWT token upon successful login.")
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Login successful, returns JWT token"),
 			@ApiResponse(responseCode = "401", description = "Invalid credentials") })
 	public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest loginRequest) {
-		Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+		Authentication authentication = authenticationManager
+			.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.username(), loginRequest.password()));
 		if (authentication.isAuthenticated()) {
-			LoginResponse loginResponse = userService.authenticate(loginRequest.getUsername(),
-					loginRequest.getPassword());
+			LoginResponse loginResponse = userService.authenticate(loginRequest.username(), loginRequest.password());
 			return ResponseEntity.ok(loginResponse);
 		}
 		throw new BadCredentialsException("Invalid credentials");
