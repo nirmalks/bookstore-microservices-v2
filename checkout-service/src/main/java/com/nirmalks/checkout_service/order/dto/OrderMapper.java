@@ -19,11 +19,11 @@ public class OrderMapper {
 			return null;
 		}
 		ShippingAddress shippingAddress = new ShippingAddress();
-		shippingAddress.setAddress(addressRequest.getAddress());
-		shippingAddress.setCity(addressRequest.getCity());
-		shippingAddress.setState(addressRequest.getState());
-		shippingAddress.setPinCode(addressRequest.getPinCode());
-		shippingAddress.setCountry(addressRequest.getCountry());
+		shippingAddress.setAddress(addressRequest.address());
+		shippingAddress.setCity(addressRequest.city());
+		shippingAddress.setState(addressRequest.state());
+		shippingAddress.setPinCode(addressRequest.pinCode());
+		shippingAddress.setCountry(addressRequest.country());
 		return shippingAddress;
 	}
 

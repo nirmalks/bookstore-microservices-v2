@@ -52,7 +52,7 @@ public class CartServiceImpl implements CartService {
 		String lockKey = LockKeys.userCart(userId);
 
 		return distributedLockService.executeWithLock(lockKey, 3, 10, TimeUnit.SECONDS, () -> {
-			BookDto book = catalogServiceClient.getBook(cartItemRequest.getBookId());
+			BookDto book = catalogServiceClient.getBook(cartItemRequest.bookId());
 			Cart cart = cartRepository.findByUserId(userId).orElseGet(() -> createCartForUser(userId));
 
 			Cart updatedCart = cartRepository.save(CartMapper.toEntity(book, cart, cartItemRequest));

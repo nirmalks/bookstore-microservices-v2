@@ -14,10 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/cart")
-@SecurityRequirement(name = "bearerAuth") // Assuming cart operations require
-											// authentication
-@Tag(name = "Shopping Cart", description = "Operations related to user shopping carts") // Added
-																						// Tag
+@SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Shopping Cart", description = "Operations related to user shopping carts")
 public class CartController {
 
 	@Autowired

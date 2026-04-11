@@ -9,7 +9,6 @@ import com.nirmalks.checkout_service.common.BookDto;
 import com.nirmalks.checkout_service.common.UserDto;
 import com.nirmalks.checkout_service.metrics.OrderMetrics;
 import com.nirmalks.checkout_service.order.api.DirectOrderRequest;
-import com.nirmalks.checkout_service.order.api.OrderFromCartRequest;
 import com.nirmalks.checkout_service.order.api.OrderResponse;
 import com.nirmalks.checkout_service.order.dto.OrderMapper;
 import com.nirmalks.checkout_service.order.dto.OrderSummaryDto;
@@ -61,8 +60,6 @@ public class OrderServiceImpl implements OrderService {
 
 	private final OrderItemRepository orderItemRepository;
 
-	private final CartRepository cartRepository;
-
 	private final CatalogServiceClient catalogServiceClient;
 
 	private final UserServiceClient userServiceClient;
@@ -75,14 +72,11 @@ public class OrderServiceImpl implements OrderService {
 
 	private final SagaMetrics sagaMetrics;
 
-	@Autowired
 	public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
-			CartRepository cartRepository, CatalogServiceClient catalogServiceClient,
-			UserServiceClient userServiceClient, OutboxService outboxService, OrderMetrics orderMetrics,
-			DistributedLockService distributedLockService, SagaMetrics sagaMetrics) {
+			CatalogServiceClient catalogServiceClient, UserServiceClient userServiceClient, OutboxService outboxService,
+			OrderMetrics orderMetrics, DistributedLockService distributedLockService, SagaMetrics sagaMetrics) {
 		this.orderRepository = orderRepository;
 		this.orderItemRepository = orderItemRepository;
-		this.cartRepository = cartRepository;
 		this.catalogServiceClient = catalogServiceClient;
 		this.userServiceClient = userServiceClient;
 		this.outboxService = outboxService;
@@ -98,10 +92,10 @@ public class OrderServiceImpl implements OrderService {
 	public OrderResponse createOrder(DirectOrderRequest directOrderRequest) {
 		Timer.Sample sample = orderMetrics.startOrderCreationTimer();
 		try {
-			var user = userServiceClient.getUser(directOrderRequest.getUserId());
+			var user = userServiceClient.getUser(directOrderRequest.userId());
 
-			var itemDtos = directOrderRequest.getItems();
-			var order = OrderMapper.toOrderEntity(user, directOrderRequest.getAddress());
+			var itemDtos = directOrderRequest.items();
+			var order = OrderMapper.toOrderEntity(user, directOrderRequest.address());
 
 			// Initialize Saga State
 			String sagaId = UUID.randomUUID().toString();
@@ -151,38 +145,6 @@ public class OrderServiceImpl implements OrderService {
 		finally {
 			orderMetrics.stopOrderCreationTimer(sample);
 		}
-	}
-
-	@Override
-	@Auditable(action = "CREATE_ORDER_FROM_CART", resource = "ORDER", resourceId = "#result.order.id",
-			detail = "checkout order from cart")
-	public OrderResponse createOrder(OrderFromCartRequest orderFromCartRequest) {
-		Cart cart = cartRepository.findById(orderFromCartRequest.getCartId())
-			.orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
-		List<OrderItem> orderItems = new ArrayList<>();
-
-		UserDto user = userServiceClient.getUser(orderFromCartRequest.getUserId());
-		Order order = OrderMapper.toOrderEntity(user, orderFromCartRequest.getShippingAddress());
-
-		for (CartItem cartItem : cart.getCartItems()) {
-			BookDto book = catalogServiceClient.getBook(cartItem.getBookId());
-
-			var orderItem = OrderMapper.toOrderItemEntity(book, cartItem, order);
-			orderItems.add(orderItem);
-		}
-
-		order.setUserId(orderFromCartRequest.getUserId());
-		order.setItems(orderItems);
-		order.setTotalCost(cart.getTotalPrice());
-		order.setOrderStatus(OrderStatus.PENDING);
-		order.setPlacedDate(LocalDateTime.now());
-		Order savedOrder = orderRepository.save(order);
-
-		for (OrderItem item : orderItems) {
-			item.setOrder(savedOrder);
-			orderItemRepository.save(item);
-		}
-		return OrderMapper.toResponse(user, savedOrder, "Order placed successfully.");
 	}
 
 	public Page<OrderSummaryDto> getOrdersByUser(Long userId, PageRequestDto pageRequestDto) {
