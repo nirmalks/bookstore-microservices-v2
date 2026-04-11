@@ -11,10 +11,8 @@ import java.util.Optional;
 public class CartMapper {
 
 	public static CartResponse toResponse(Cart cart) {
-		CartResponse response = new CartResponse();
-		response.setItems(cart.getCartItems().stream().map(CartMapper::toCartItemDto).toList());
-		response.setTotalPrice(cart.getTotalPrice());
-		return response;
+		return new CartResponse(cart.getId(), cart.getCartItems().stream().map(CartMapper::toCartItemDto).toList(),
+				cart.getTotalPrice());
 	}
 
 	public static CartItemDto toCartItemDto(CartItem item) {
@@ -29,13 +27,13 @@ public class CartMapper {
 
 		if (existingCartItem.isPresent()) {
 			CartItem cartItem = existingCartItem.get();
-			cartItem.setQuantity(cartItem.getQuantity() + cartItemRequest.getQuantity());
+			cartItem.setQuantity(cartItem.getQuantity() + cartItemRequest.quantity());
 			cartItem.setPrice(book.getPrice());
 		}
 		else {
 			CartItem newCartItem = new CartItem();
 			newCartItem.setBookId(book.getId());
-			newCartItem.setQuantity(cartItemRequest.getQuantity());
+			newCartItem.setQuantity(cartItemRequest.quantity());
 			newCartItem.setPrice(book.getPrice());
 			newCartItem.setCart(cart);
 			cart.getCartItems().add(newCartItem);
@@ -47,8 +45,8 @@ public class CartMapper {
 	public static CartItem toCartItemEntity(BookDto book, CartItemDto itemDto) {
 		CartItem cartItem = new CartItem();
 		cartItem.setBookId(book.getId());
-		cartItem.setPrice(itemDto.getPrice());
-		cartItem.setQuantity(itemDto.getQuantity());
+		cartItem.setPrice(itemDto.price());
+		cartItem.setQuantity(itemDto.quantity());
 		return cartItem;
 	}
 

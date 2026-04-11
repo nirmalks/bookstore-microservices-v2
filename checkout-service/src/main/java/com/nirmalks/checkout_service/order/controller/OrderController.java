@@ -1,11 +1,11 @@
 package com.nirmalks.checkout_service.order.controller;
 
 import com.nirmalks.checkout_service.order.api.DirectOrderRequest;
-import com.nirmalks.checkout_service.order.api.OrderFromCartRequest;
 import com.nirmalks.checkout_service.order.api.OrderResponse;
 import com.nirmalks.checkout_service.order.dto.OrderSummaryDto;
 import com.nirmalks.checkout_service.order.entity.OrderStatus;
 import com.nirmalks.checkout_service.order.service.OrderService;
+import common.RestPage;
 import dto.PageRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -19,14 +19,15 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/orders")
-@SecurityRequirement(name = "bearerAuth") // Assuming order operations require
-											// authentication
-@Tag(name = "Order Management", description = "Operations related to user orders") // Added
-																					// Tag
+@SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Order Management", description = "Operations related to user orders")
 public class OrderController {
 
-	@Autowired
-	private OrderService orderService;
+	private final OrderService orderService;
+
+	public OrderController(OrderService orderService) {
+		this.orderService = orderService;
+	}
 
 	@PostMapping("/direct")
 	@Operation(summary = "Create a direct order",
@@ -38,26 +39,17 @@ public class OrderController {
 		return ResponseEntity.ok(order);
 	}
 
-	@PostMapping("/from-cart")
-	@Operation(summary = "Create order from cart",
-			description = "Creates an order based on the items in the user's shopping cart.")
-	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Order created successfully from cart"),
-			@ApiResponse(responseCode = "400", description = "Invalid input or cart is empty"),
-			@ApiResponse(responseCode = "404", description = "User or cart not found") })
-	public ResponseEntity<OrderResponse> createOrderFromCart(@RequestBody OrderFromCartRequest orderRequest) {
-		var order = orderService.createOrder(orderRequest);
-		return ResponseEntity.ok(order);
-	}
-
 	@GetMapping("/{userId}")
 	@Operation(summary = "Get orders by user",
 			description = "Retrieves a paginated list of orders for a specific user.")
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of orders returned successfully"),
 			@ApiResponse(responseCode = "404", description = "User not found") })
-	public ResponseEntity<Page<OrderSummaryDto>> getOrdersByUser(@PathVariable Long userId,
-			PageRequestDto pageRequestDto) {
+	public ResponseEntity<RestPage<OrderSummaryDto>> getOrdersByUser(@PathVariable Long userId,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size,
+			@RequestParam(defaultValue = "id") String sortKey, @RequestParam(defaultValue = "asc") String sortOrder) {
+		PageRequestDto pageRequestDto = new PageRequestDto(page, size, sortKey, sortOrder);
 		var orders = orderService.getOrdersByUser(userId, pageRequestDto);
-		return ResponseEntity.ok(orders);
+		return ResponseEntity.ok(new RestPage<>(orders));
 	}
 
 	@PutMapping("/{orderId}")

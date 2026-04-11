@@ -1,6 +1,6 @@
 package locking;
 
-public class LockKeys {
+public final class LockKeys {
 
 	private LockKeys() {
 	}
