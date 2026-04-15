@@ -20,6 +20,10 @@ public class OrderMetrics {
 
 	private final Counter ordersCancelledCounter;
 
+	private final Counter checkoutInitiatedCounter;
+
+	private final Counter cartItemsAddedCounter;
+
 	private final Timer orderCreationTimer;
 
 	private final MeterRegistry meterRegistry;
@@ -45,6 +49,16 @@ public class OrderMetrics {
 			.tag("service", "checkout-service")
 			.register(meterRegistry);
 
+		this.checkoutInitiatedCounter = Counter.builder("checkout.initiated")
+			.description("Total number of checkouts initiated")
+			.tag("service", "checkout-service")
+			.register(meterRegistry);
+
+		this.cartItemsAddedCounter = Counter.builder("cart.items.added")
+			.description("Total number of items added to cart")
+			.tag("service", "checkout-service")
+			.register(meterRegistry);
+
 		// Timer for performance tracking
 		this.orderCreationTimer = Timer.builder("orders.creation.time")
 			.description("Time taken to create an order")
@@ -62,6 +76,14 @@ public class OrderMetrics {
 
 	public void incrementOrdersCancelled() {
 		ordersCancelledCounter.increment();
+	}
+
+	public void incrementCheckoutInitiated() {
+		checkoutInitiatedCounter.increment();
+	}
+
+	public void incrementCartItemsAdded() {
+		cartItemsAddedCounter.increment();
 	}
 
 	public void recordOrderCreationTime(long milliseconds) {
