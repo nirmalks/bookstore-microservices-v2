@@ -5,10 +5,10 @@ import com.nirmalks.checkout_service.cart.api.CartResponse;
 import com.nirmalks.checkout_service.cart.dto.CartMapper;
 import com.nirmalks.checkout_service.cart.entity.Cart;
 import com.nirmalks.checkout_service.cart.entity.CartItem;
-import com.nirmalks.checkout_service.cart.repository.CartItemRepository;
 import com.nirmalks.checkout_service.cart.repository.CartRepository;
 import com.nirmalks.checkout_service.client.CatalogServiceClient;
 import com.nirmalks.checkout_service.common.BookDto;
+import com.nirmalks.checkout_service.metrics.OrderMetrics;
 import exceptions.ResourceNotFoundException;
 import locking.DistributedLockService;
 import locking.LockKeys;
@@ -32,12 +32,15 @@ public class CartServiceImpl implements CartService {
 
 	private final DistributedLockService distributedLockService;
 
+	private final OrderMetrics orderMetrics;
+
 	@Autowired
 	public CartServiceImpl(CartRepository cartRepository, CatalogServiceClient catalogServiceClient,
-			DistributedLockService distributedLockService) {
+			DistributedLockService distributedLockService, OrderMetrics orderMetrics) {
 		this.cartRepository = cartRepository;
 		this.catalogServiceClient = catalogServiceClient;
 		this.distributedLockService = distributedLockService;
+		this.orderMetrics = orderMetrics;
 	}
 
 	public CartResponse getCart(Long userId) {
@@ -51,6 +54,7 @@ public class CartServiceImpl implements CartService {
 	public CartResponse addToCart(Long userId, CartItemRequest cartItemRequest) {
 		String lockKey = LockKeys.userCart(userId);
 
+		orderMetrics.incrementCartItemsAdded();
 		return distributedLockService.executeWithLock(lockKey, 3, 10, TimeUnit.SECONDS, () -> {
 			BookDto book = catalogServiceClient.getBook(cartItemRequest.bookId());
 			Cart cart = cartRepository.findByUserId(userId).orElseGet(() -> createCartForUser(userId));
