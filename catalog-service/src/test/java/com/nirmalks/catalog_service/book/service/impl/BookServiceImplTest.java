@@ -108,16 +108,8 @@ class BookServiceImplTest {
 		book.setAuthors(List.of(author));
 		book.setGenres(List.of(genre));
 
-		bookRequest = new BookRequest();
-		bookRequest.setTitle("Book 1");
-		bookRequest.setPrice(10.0);
-		bookRequest.setStock(10);
-		bookRequest.setIsbn("1234567890");
-		bookRequest.setPublishedDate(LocalDate.now());
-		bookRequest.setAuthorIds(List.of(1L));
-		bookRequest.setGenreIds(List.of(1L));
-		bookRequest.setDescription("Description 1");
-		bookRequest.setImagePath("image.jpg");
+		bookRequest = new BookRequest("Book 1", List.of(1L), 10.0, 10, "1234567890", LocalDate.now(), List.of(1L),
+				"Description 1", "image.jpg");
 		pageRequestDto = new PageRequestDto(0, 10, "id", "asc");
 	}
 

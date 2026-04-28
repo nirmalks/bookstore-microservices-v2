@@ -1,34 +1,11 @@
 package com.nirmalks.catalog_service.author.api;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-public class AuthorRequest {
-
-	@NotNull(message = "Name is required")
-	private String name;
-
-	@NotNull(message = "Bio is required")
-	private String bio;
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getBio() {
-		return bio;
-	}
-
-	public void setBio(String bio) {
-		this.bio = bio;
-	}
-
-	@Override
-	public String toString() {
-		return "AuthorRequest{" + "name='" + name + '\'' + ", bio='" + bio + '\'' + '}';
-	}
-
+public record AuthorRequest(
+		@NotBlank(message = "Name is required") @Size(max = 100,
+				message = "Name must not exceed 100 characters") String name,
+		@NotBlank(message = "Bio is required") @Size(max = 2000,
+				message = "Bio must not exceed 2000 characters") String bio) {
 }

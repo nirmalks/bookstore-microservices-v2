@@ -65,11 +65,8 @@ class GenreControllerTest {
 
 	@BeforeEach
 	void setUp() {
-		genreDto = new GenreDto();
-		genreDto.setId(1L);
-		genreDto.setName("Fiction");
-		genreRequest = new GenreRequest();
-		genreRequest.setName("Fiction");
+		genreDto = new GenreDto(1L, "Fiction");
+		genreRequest = new GenreRequest("Fiction");
 	}
 
 	@Test

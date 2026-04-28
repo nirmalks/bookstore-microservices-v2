@@ -56,9 +56,7 @@ class AuthorServiceImplTest {
 		author.setName("John Doe");
 		author.setBio("some bio");
 
-		authorRequest = new AuthorRequest();
-		authorRequest.setName("John Doe");
-		authorRequest.setBio("some bio");
+		authorRequest = new AuthorRequest("John Doe", "some bio");
 
 		pageRequestDto = new PageRequestDto(0, 10, "id", "asc");
 	}

@@ -31,19 +31,13 @@ public class OrderMapper {
 		if (shippingAddress == null) {
 			return null;
 		}
-		AddressDto addressDto = new AddressDto();
-		addressDto.setAddress(shippingAddress.getAddress());
-		addressDto.setCity(shippingAddress.getCity());
-		addressDto.setState(shippingAddress.getState());
-		addressDto.setPinCode(shippingAddress.getPinCode());
-		addressDto.setCountry(shippingAddress.getCountry());
-
-		return addressDto;
+		return new AddressDto(shippingAddress.getCity(), shippingAddress.getState(), shippingAddress.getCountry(),
+				shippingAddress.getPinCode(), shippingAddress.getAddress());
 	}
 
 	public static Order toOrderEntity(UserDto user, AddressRequest addressRequest) {
 		Order order = new Order();
-		order.setUserId(user.getId());
+		order.setUserId(user.id());
 		order.setOrderStatus(OrderStatus.PENDING);
 		order.setPlacedDate(LocalDateTime.now());
 		order.setTotalCost(0.0);
@@ -64,7 +58,7 @@ public class OrderMapper {
 	public static OrderItem toOrderItemEntity(BookDto book, OrderItemRequest itemDto, Order order) {
 		var orderItem = new OrderItem();
 		orderItem.setBookId(book.getId());
-		orderItem.setQuantity(itemDto.getQuantity());
+		orderItem.setQuantity(itemDto.quantity());
 		orderItem.setPrice(book.getPrice());
 		orderItem.setBookTitle(book.getTitle());
 		orderItem.setOrder(order);
@@ -72,36 +66,19 @@ public class OrderMapper {
 	}
 
 	public static OrderResponse toResponse(UserDto user, Order order, String message) {
-		OrderResponse response = new OrderResponse();
-		response.setMessage(message);
-		response.setOrder(toOrderSummary(order, user));
-		response.setUser(user);
-		return response;
+		return new OrderResponse(toOrderSummary(order, user), user, message);
 	}
 
 	public static OrderSummaryDto toOrderSummary(Order order, UserDto user) {
-		OrderSummaryDto orderSummary = new OrderSummaryDto();
-		orderSummary.setId(order.getId());
-		orderSummary.setStatus(order.getOrderStatus().toString());
-		orderSummary.setPlacedDate(order.getPlacedDate());
-		orderSummary.setTotalCost(order.getTotalCost());
-		orderSummary.setItems(order.getItems().stream().map(OrderMapper::toOrderItemDto).toList());
-		orderSummary.setAddress(OrderMapper.toAddressDto(order.getShippingAddress()));
-
-		return orderSummary;
+		return new OrderSummaryDto(order.getId(), order.getOrderStatus().toString(), order.getPlacedDate(),
+				order.getTotalCost(), order.getItems().stream().map(OrderMapper::toOrderItemDto).toList(),
+				OrderMapper.toAddressDto(order.getShippingAddress()));
 	}
 
 	public static OrderItemDto toOrderItemDto(OrderItem orderItem) {
-		var orderItemDto = new OrderItemDto();
-		if (orderItem.getOrder() != null) {
-			orderItemDto.setOrderId(orderItem.getOrder().getId());
-		}
-		orderItemDto.setBookId(orderItem.getBookId());
-		orderItemDto.setQuantity(orderItem.getQuantity());
-		orderItemDto.setId(orderItem.getId());
-		orderItemDto.setPrice(orderItem.getPrice());
-		orderItemDto.setName(orderItem.getBookTitle());
-		return orderItemDto;
+		Long orderId = orderItem.getOrder() != null ? orderItem.getOrder().getId() : null;
+		return new OrderItemDto(orderItem.getId(), orderId, orderItem.getBookId(), orderItem.getQuantity(),
+				orderItem.getPrice(), orderItem.getBookTitle());
 	}
 
 }

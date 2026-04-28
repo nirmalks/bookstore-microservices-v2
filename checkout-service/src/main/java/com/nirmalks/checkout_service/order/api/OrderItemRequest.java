@@ -1,35 +1,10 @@
 package com.nirmalks.checkout_service.order.api;
 
-public class OrderItemRequest {
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
-	private Long bookId;
-
-	private int quantity;
-
-	private double price;
-
-	public Long getBookId() {
-		return bookId;
-	}
-
-	public void setBookId(Long bookId) {
-		this.bookId = bookId;
-	}
-
-	public int getQuantity() {
-		return quantity;
-	}
-
-	public void setQuantity(int quantity) {
-		this.quantity = quantity;
-	}
-
-	public double getPrice() {
-		return price;
-	}
-
-	public void setPrice(double price) {
-		this.price = price;
-	}
-
+public record OrderItemRequest(@NotNull(message = "Book ID is required") Long bookId,
+		@Min(value = 1, message = "Quantity must be at least 1") int quantity,
+		@Positive(message = "Price must be positive") double price) {
 }

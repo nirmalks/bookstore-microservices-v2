@@ -1,23 +1,8 @@
 package com.nirmalks.catalog_service.genre.api;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-public class GenreRequest {
-
-	@NotNull
-	String name;
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	@Override
-	public String toString() {
-		return "GenreRequest{" + "name='" + name + '\'' + '}';
-	}
-
+public record GenreRequest(@NotBlank(message = "Genre name is required") @Size(max = 50,
+		message = "Genre name must not exceed 50 characters") String name) {
 }

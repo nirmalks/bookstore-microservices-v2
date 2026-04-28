@@ -17,28 +17,28 @@ public class BookMapper {
 
 	public static Book toEntity(BookRequest bookRequest, List<Author> authors, List<Genre> genres) {
 		var book = new Book();
-		book.setTitle(bookRequest.getTitle());
+		book.setTitle(bookRequest.title());
 		book.setAuthors(authors);
-		book.setPrice(bookRequest.getPrice());
-		book.setStock(bookRequest.getStock());
-		book.setIsbn(bookRequest.getIsbn());
-		book.setPublishedDate(bookRequest.getPublishedDate());
+		book.setPrice(bookRequest.price());
+		book.setStock(bookRequest.stock());
+		book.setIsbn(bookRequest.isbn());
+		book.setPublishedDate(bookRequest.publishedDate());
 		book.setGenres(genres);
-		book.setDescription(bookRequest.getDescription());
-		book.setImagePath(bookRequest.getImagePath());
+		book.setDescription(bookRequest.description());
+		book.setImagePath(bookRequest.imagePath());
 		return book;
 	}
 
 	public static Book toEntity(Book book, BookRequest bookRequest, List<Author> authors, List<Genre> genres) {
-		book.setTitle(bookRequest.getTitle());
+		book.setTitle(bookRequest.title());
 		book.setAuthors(authors);
-		book.setPrice(bookRequest.getPrice());
-		book.setStock(bookRequest.getStock());
-		book.setIsbn(bookRequest.getIsbn());
-		book.setPublishedDate(bookRequest.getPublishedDate());
+		book.setPrice(bookRequest.price());
+		book.setStock(bookRequest.stock());
+		book.setIsbn(bookRequest.isbn());
+		book.setPublishedDate(bookRequest.publishedDate());
 		book.setGenres(genres);
-		book.setDescription(bookRequest.getDescription());
-		book.setImagePath(bookRequest.getImagePath());
+		book.setDescription(bookRequest.description());
+		book.setImagePath(bookRequest.imagePath());
 		return book;
 	}
 

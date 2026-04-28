@@ -57,7 +57,7 @@ public class GenreController {
 		var genre = genreService.createGenre(GenreRequest);
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest()
 			.path("/{id}")
-			.buildAndExpand(genre.getId())
+			.buildAndExpand(genre.id())
 			.toUri();
 		return ResponseEntity.status(HttpStatus.CREATED)
 			.header(HttpHeaders.LOCATION, String.valueOf(location))

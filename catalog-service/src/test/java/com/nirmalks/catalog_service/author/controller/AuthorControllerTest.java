@@ -70,9 +70,7 @@ class AuthorControllerTest {
 	@BeforeEach
 	void setUp() {
 		authorDto = new AuthorDto(1L, "John Doe", "Bio");
-		authorRequest = new AuthorRequest();
-		authorRequest.setName("John Doe");
-		authorRequest.setBio("Bio");
+		authorRequest = new AuthorRequest("John Doe", "Bio");
 	}
 
 	@Test
@@ -129,8 +127,7 @@ class AuthorControllerTest {
 
 	@Test
 	void createAuthor_will_return_400_if_author_request_is_invalid() throws Exception {
-		authorRequest.setName(null);
-		authorRequest.setBio(null);
+		authorRequest = new AuthorRequest(null, null);
 		mockMvc
 			.perform(post("/api/v1/authors").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(authorRequest)))
@@ -165,8 +162,7 @@ class AuthorControllerTest {
 
 	@Test
 	void updateAuthor_will_return_400_if_author_request_is_invalid() throws Exception {
-		authorRequest.setName(null);
-		authorRequest.setBio(null);
+		authorRequest = new AuthorRequest(null, null);
 		mockMvc
 			.perform(put("/api/v1/authors/{id}", 1L).contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(authorRequest)))

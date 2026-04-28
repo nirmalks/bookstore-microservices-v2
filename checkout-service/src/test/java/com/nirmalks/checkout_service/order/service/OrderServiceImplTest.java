@@ -4,12 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -26,11 +24,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springdoc.core.converters.models.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
-import com.nirmalks.checkout_service.cart.repository.CartRepository;
 import com.nirmalks.checkout_service.client.CatalogServiceClient;
 import com.nirmalks.checkout_service.client.UserServiceClient;
 import com.nirmalks.checkout_service.common.UserDto;
@@ -94,9 +90,7 @@ class OrderServiceImplTest {
 	@BeforeEach
 	void setup() {
 		addressRequest = new AddressRequest("City", "State", "Country", "123456", false, "Address");
-		userDto = new UserDto();
-		userDto.setId(1L);
-		userDto.setEmail("user@example.com");
+		userDto = new UserDto("user@example.com", 1L, "username");
 		order = new Order();
 		order.setId(100L);
 		order.setTotalCost(0.0);
@@ -123,14 +117,14 @@ class OrderServiceImplTest {
 		doNothing().when(outboxService).saveOrderCreatedEvent(any(String.class), any(OrderMessage.class));
 		OrderResponse response = orderService.createOrder(directOrderRequest);
 		assertNotNull(response);
-		assertEquals(order.getId(), response.getOrder().getId());
-		assertEquals(order.getTotalCost(), response.getOrder().getTotalCost());
-		assertEquals("PENDING", response.getOrder().getStatus());
-		assertEquals("Order placed successfully.", response.getMessage());
-		assertEquals(1, response.getOrder().getItems().size());
-		assertEquals(1, response.getOrder().getItems().get(0).getQuantity());
-		assertEquals(1, response.getOrder().getItems().get(0).getBookId());
-		assertEquals(1, response.getOrder().getItems().get(0).getPrice());
+		assertEquals(order.getId(), response.order().id());
+		assertEquals(order.getTotalCost(), response.order().totalCost());
+		assertEquals("PENDING", response.order().status());
+		assertEquals("Order placed successfully.", response.message());
+		assertEquals(1, response.order().items().size());
+		assertEquals(1, response.order().items().get(0).quantity());
+		assertEquals(1, response.order().items().get(0).bookId());
+		assertEquals(1, response.order().items().get(0).price());
 
 		verify(outboxService, times(1)).saveOrderCreatedEvent(any(String.class), any(OrderMessage.class));
 		verify(orderMetrics, times(1)).incrementOrdersCreated();
@@ -151,9 +145,7 @@ class OrderServiceImplTest {
 	@Test
 	void createOrder_should_throw_exception_when_cart_is_empty() {
 		DirectOrderRequest directOrderRequest = new DirectOrderRequest(1L, new ArrayList<>(), addressRequest);
-		UserDto userDto = new UserDto();
-		userDto.setId(1L);
-		userDto.setEmail("user@example.com");
+		UserDto userDto = new UserDto("user@example.com", 1L, "username");
 		when(userServiceClient.getUser(1L)).thenReturn(userDto);
 		assertThrows(RuntimeException.class, () -> orderService.createOrder(directOrderRequest));
 	}
@@ -194,13 +186,13 @@ class OrderServiceImplTest {
 		Page<OrderSummaryDto> response = orderService.getOrdersByUser(1L, pageRequestDto);
 		assertNotNull(response);
 		assertEquals(1, response.getSize());
-		assertEquals(order.getId(), response.getContent().get(0).getId());
-		assertEquals(order.getTotalCost(), response.getContent().get(0).getTotalCost());
-		assertEquals(OrderStatus.PENDING.name(), response.getContent().get(0).getStatus());
-		assertEquals(1, response.getContent().get(0).getItems().size());
-		assertEquals(1, response.getContent().get(0).getItems().get(0).getQuantity());
-		assertEquals(1, response.getContent().get(0).getItems().get(0).getBookId());
-		assertEquals(1, response.getContent().get(0).getItems().get(0).getPrice());
+		assertEquals(order.getId(), response.getContent().get(0).id());
+		assertEquals(order.getTotalCost(), response.getContent().get(0).totalCost());
+		assertEquals(OrderStatus.PENDING.name(), response.getContent().get(0).status());
+		assertEquals(1, response.getContent().get(0).items().size());
+		assertEquals(1, response.getContent().get(0).items().get(0).quantity());
+		assertEquals(1, response.getContent().get(0).items().get(0).bookId());
+		assertEquals(1, response.getContent().get(0).items().get(0).price());
 	}
 
 	@Test

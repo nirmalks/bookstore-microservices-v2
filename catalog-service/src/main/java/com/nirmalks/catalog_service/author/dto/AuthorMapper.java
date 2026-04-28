@@ -10,15 +10,15 @@ public class AuthorMapper {
 	}
 
 	public static Author toEntity(Author author, AuthorRequest authorRequest) {
-		author.setName(authorRequest.getName());
-		author.setBio(authorRequest.getBio());
+		author.setName(authorRequest.name());
+		author.setBio(authorRequest.bio());
 		return author;
 	}
 
 	public static Author toEntity(AuthorRequest authorRequest) {
 		Author author = new Author();
-		author.setName(authorRequest.getName());
-		author.setBio(authorRequest.getBio());
+		author.setName(authorRequest.name());
+		author.setBio(authorRequest.bio());
 		return author;
 	}
 
