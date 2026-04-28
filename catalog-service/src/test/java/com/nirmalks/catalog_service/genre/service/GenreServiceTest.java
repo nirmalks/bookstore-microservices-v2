@@ -19,7 +19,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -54,8 +53,7 @@ class GenreServiceTest {
 		genre.setId(1L);
 		genre.setName("Fiction");
 
-		genreRequest = new GenreRequest();
-		genreRequest.setName("Fiction");
+		genreRequest = new GenreRequest("Fiction");
 
 		pageRequestDto = new PageRequestDto(0, 10, "id", "asc");
 	}
@@ -70,8 +68,8 @@ class GenreServiceTest {
 	void getGenreById_will_return_genre_dto_if_genre_found_in_db() {
 		when(genreRepository.findById(any())).thenReturn(Optional.of(genre));
 		var result = genreService.getGenreById(1L);
-		assertEquals(1L, result.getId());
-		assertEquals("Fiction", result.getName());
+		assertEquals(1L, result.id());
+		assertEquals("Fiction", result.name());
 	}
 
 	@Test
@@ -79,8 +77,8 @@ class GenreServiceTest {
 		when(genreRepository.save(any())).thenReturn(genre);
 		ArgumentCaptor<Genre> genreArgumentCaptor = ArgumentCaptor.forClass(Genre.class);
 		var result = genreService.createGenre(genreRequest);
-		assertEquals(1L, result.getId());
-		assertEquals("Fiction", result.getName());
+		assertEquals(1L, result.id());
+		assertEquals("Fiction", result.name());
 		verify(genreRepository).save(genreArgumentCaptor.capture());
 		assertEquals("Fiction", genreArgumentCaptor.getValue().getName());
 	}
@@ -97,8 +95,8 @@ class GenreServiceTest {
 		when(genreRepository.save(any())).thenReturn(genre);
 		ArgumentCaptor<Genre> genreArgumentCaptor = ArgumentCaptor.forClass(Genre.class);
 		var result = genreService.updateGenre(1L, genreRequest);
-		assertEquals(1L, result.getId());
-		assertEquals("Fiction", result.getName());
+		assertEquals(1L, result.id());
+		assertEquals("Fiction", result.name());
 		verify(genreRepository).save(genreArgumentCaptor.capture());
 		assertEquals("Fiction", genreArgumentCaptor.getValue().getName());
 	}
@@ -108,8 +106,8 @@ class GenreServiceTest {
 		Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
 		when(genreRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(genre)));
 		var result = genreService.getAllGenres(pageRequestDto);
-		assertEquals(1L, result.getContent().get(0).getId());
-		assertEquals("Fiction", result.getContent().get(0).getName());
+		assertEquals(1L, result.getContent().get(0).id());
+		assertEquals("Fiction", result.getContent().get(0).name());
 	}
 
 	@Test

@@ -149,8 +149,7 @@ class BookControllerTest {
 
 	@Test
 	void createBook_will_return_400_if_book_request_is_invalid() throws Exception {
-		BookRequest invalidRequest = new BookRequest(); // Empty request will fail
-														// validation
+		BookRequest invalidRequest = new BookRequest(null, null, null, 0, null, null, null, null, null);
 
 		mockMvc
 			.perform(post("/api/v1/books").contentType(MediaType.APPLICATION_JSON)
@@ -181,15 +180,15 @@ class BookControllerTest {
 		ArgumentCaptor<BookRequest> bookDtoCaptor = ArgumentCaptor.forClass(BookRequest.class);
 		verify(bookService).updateBook(any(), bookDtoCaptor.capture());
 		BookRequest capturedBookRequest = bookDtoCaptor.getValue();
-		assertEquals("Book 1", capturedBookRequest.getTitle());
-		assertEquals(10.0, capturedBookRequest.getPrice());
-		assertEquals(10, capturedBookRequest.getStock());
-		assertEquals("1234567890", capturedBookRequest.getIsbn());
-		assertEquals(LocalDate.now(), capturedBookRequest.getPublishedDate());
-		assertEquals(List.of(1L), capturedBookRequest.getAuthorIds());
-		assertEquals(List.of(1L), capturedBookRequest.getGenreIds());
-		assertEquals("Description 1", capturedBookRequest.getDescription());
-		assertEquals("image.jpg", capturedBookRequest.getImagePath());
+		assertEquals("Book 1", capturedBookRequest.title());
+		assertEquals(10.0, capturedBookRequest.price());
+		assertEquals(10, capturedBookRequest.stock());
+		assertEquals("1234567890", capturedBookRequest.isbn());
+		assertEquals(LocalDate.now(), capturedBookRequest.publishedDate());
+		assertEquals(List.of(1L), capturedBookRequest.authorIds());
+		assertEquals(List.of(1L), capturedBookRequest.genreIds());
+		assertEquals("Description 1", capturedBookRequest.description());
+		assertEquals("image.jpg", capturedBookRequest.imagePath());
 	}
 
 	@Test
@@ -204,7 +203,7 @@ class BookControllerTest {
 
 	@Test
 	void updateBook_will_return_400_if_book_request_is_invalid() throws Exception {
-		BookRequest bookRequest = new BookRequest();
+		BookRequest bookRequest = new BookRequest(null, null, null, 0, null, null, null, null, null);
 
 		mockMvc
 			.perform(put("/api/v1/books/{id}", 1L).contentType(MediaType.APPLICATION_JSON)

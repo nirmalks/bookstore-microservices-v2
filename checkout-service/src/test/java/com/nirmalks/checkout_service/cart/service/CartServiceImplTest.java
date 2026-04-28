@@ -50,6 +50,9 @@ class CartServiceImplTest {
 	@Mock
 	private DistributedLockService distributedLockService;
 
+	@Mock
+	private com.nirmalks.checkout_service.metrics.OrderMetrics orderMetrics;
+
 	Cart cart;
 
 	@BeforeEach
@@ -104,6 +107,7 @@ class CartServiceImplTest {
 		assertEquals(1L, cartResponse.items().get(0).bookId());
 		assertEquals(2, cartResponse.items().get(0).quantity());
 		assertEquals(10.0, cartResponse.items().get(0).price());
+		verify(orderMetrics).incrementCartItemsAdded();
 	}
 
 	@Test
@@ -116,6 +120,7 @@ class CartServiceImplTest {
 		}).when(distributedLockService)
 			.executeWithLock(anyString(), anyLong(), anyLong(), any(TimeUnit.class), any(Supplier.class));
 		assertThrows(ResourceNotFoundException.class, () -> cartService.addToCart(1L, cartItemRequest));
+		verify(orderMetrics).incrementCartItemsAdded();
 	}
 
 	@Test

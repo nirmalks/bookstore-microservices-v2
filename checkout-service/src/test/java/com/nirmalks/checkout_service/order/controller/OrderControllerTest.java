@@ -58,16 +58,10 @@ class OrderControllerTest {
 		addressRequest = new AddressRequest("City", "State", "Country", "123456", false, "Address");
 		directOrderRequest = new DirectOrderRequest(1L, new ArrayList<>(), addressRequest);
 
-		OrderSummaryDto orderSummary = new OrderSummaryDto();
-		orderSummary.setId(100L);
-		orderSummary.setStatus("PENDING");
-		orderSummary.setTotalCost(100.0);
-		orderSummary.setPlacedDate(LocalDateTime.now());
-		orderSummary.setItems(new ArrayList<>());
+		OrderSummaryDto orderSummary = new OrderSummaryDto(100L, "PENDING", LocalDateTime.now(), 100.0,
+				new ArrayList<>(), null);
 
-		orderResponse = new OrderResponse();
-		orderResponse.setOrder(orderSummary);
-		orderResponse.setMessage("Order placed successfully.");
+		orderResponse = new OrderResponse(orderSummary, null, "Order placed successfully.");
 	}
 
 	@Test
@@ -84,8 +78,8 @@ class OrderControllerTest {
 
 	@Test
 	void getOrdersByUser_should_return_orders_successfully() throws Exception {
-		OrderSummaryDto orderSummary = new OrderSummaryDto();
-		orderSummary.setId(100L);
+		OrderSummaryDto orderSummary = new OrderSummaryDto(100L, "PENDING", LocalDateTime.now(), 100.0,
+				new ArrayList<>(), null);
 		PageImpl<OrderSummaryDto> page = new PageImpl<>(List.of(orderSummary));
 
 		when(orderService.getOrdersByUser(any(), any())).thenReturn(page);

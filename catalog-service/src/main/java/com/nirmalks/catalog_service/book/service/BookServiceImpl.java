@@ -89,8 +89,8 @@ public class BookServiceImpl implements BookService {
 	@CacheEvict(value = { "books", "book" }, allEntries = true)
 	@Auditable(action = "CREATE_BOOK", resource = "BOOK", resourceId = "#result.id", detail = "catalog create")
 	public BookDto createBook(BookRequest bookRequest) {
-		var authors = authorService.getAuthorsByIds(bookRequest.getAuthorIds());
-		var genres = genreService.getGenresByIds(bookRequest.getGenreIds());
+		var authors = authorService.getAuthorsByIds(bookRequest.authorIds());
+		var genres = genreService.getGenresByIds(bookRequest.genreIds());
 		return BookMapper.toDTO(bookRepository.save(BookMapper.toEntity(bookRequest, authors, genres)));
 	}
 
@@ -100,8 +100,8 @@ public class BookServiceImpl implements BookService {
 	public BookDto updateBook(Long id, BookRequest bookRequest) {
 		var existingBook = bookRepository.findById(id)
 			.orElseThrow(() -> new ResourceNotFoundException("book not found"));
-		var authors = authorService.getAuthorsByIds(bookRequest.getAuthorIds());
-		var genres = genreService.getGenresByIds(bookRequest.getGenreIds());
+		var authors = authorService.getAuthorsByIds(bookRequest.authorIds());
+		var genres = genreService.getGenresByIds(bookRequest.genreIds());
 		return BookMapper.toDTO(bookRepository.save(BookMapper.toEntity(existingBook, bookRequest, authors, genres)));
 	}
 

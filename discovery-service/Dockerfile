@@ -24,6 +24,7 @@ COPY config-server/pom.xml config-server/
 COPY notification-service/pom.xml notification-service/
 COPY audit-service/pom.xml audit-service/
 
+COPY coverage-report/pom.xml coverage-report/
 COPY shared-utils/src shared-utils/src
 
 RUN --mount=type=cache,target=/root/.m2,sharing=locked mvn clean install -DskipTests -pl shared-utils -am

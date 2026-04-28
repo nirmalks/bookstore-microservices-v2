@@ -42,10 +42,7 @@ class UserServiceClientTest {
 
 	@BeforeEach
 	void setUp() {
-		testUser = new UserDto();
-		testUser.setId(1L);
-		testUser.setEmail("test@example.com");
-		testUser.setUsername("johndoe");
+		testUser = new UserDto("test@example.com", 1L, "johndoe");
 	}
 
 	@Test
@@ -58,8 +55,8 @@ class UserServiceClientTest {
 		UserDto result = userServiceClient.getUser(1L);
 
 		assertNotNull(result);
-		assertEquals(testUser.getId(), result.getId());
-		assertEquals(testUser.getEmail(), result.getEmail());
+		assertEquals(testUser.id(), result.id());
+		assertEquals(testUser.email(), result.email());
 	}
 
 	@Test

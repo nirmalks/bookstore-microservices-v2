@@ -5,7 +5,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@SpringBootTest()
+@SpringBootTest
 class CheckoutServiceApplicationTests {
 
 	@MockitoBean

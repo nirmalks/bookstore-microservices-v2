@@ -23,6 +23,7 @@ COPY shared-utils/src shared-utils/src
 COPY config-server/pom.xml config-server/
 COPY notification-service/pom.xml notification-service/
 COPY audit-service/pom.xml audit-service/
+COPY coverage-report/pom.xml coverage-report/
 
 RUN --mount=type=cache,target=/root/.m2,sharing=locked mvn clean install -DskipTests -pl shared-utils -am
 RUN --mount=type=cache,target=/root/.m2,sharing=locked mvn dependency:go-offline -B

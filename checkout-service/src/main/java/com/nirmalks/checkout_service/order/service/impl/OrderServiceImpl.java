@@ -100,7 +100,7 @@ public class OrderServiceImpl implements OrderService {
 			ExecutorService executor = Executors.newFixedThreadPool(8);
 			List<CompletableFuture<OrderItem>> orderItemFutures = itemDtos.stream()
 				.map(itemDto -> CompletableFuture.supplyAsync(() -> {
-					var book = catalogServiceClient.getBook(itemDto.getBookId());
+					var book = catalogServiceClient.getBook(itemDto.bookId());
 					return OrderMapper.toOrderItemEntity(book, itemDto, order);
 				}, executor))
 				.toList();
@@ -119,8 +119,8 @@ public class OrderServiceImpl implements OrderService {
 				.map(item -> new OrderItemPayload(item.getBookId(), item.getQuantity()))
 				.toList();
 
-			OrderMessage message = new OrderMessage(null, sagaId, savedOrder.getId().toString(), user.getId(),
-					user.getEmail(), savedOrder.getTotalCost(), savedOrder.getPlacedDate(), itemPayloads);
+			OrderMessage message = new OrderMessage(null, sagaId, savedOrder.getId().toString(), user.id(),
+					user.email(), savedOrder.getTotalCost(), savedOrder.getPlacedDate(), itemPayloads);
 			outboxService.saveOrderCreatedEvent(savedOrder.getId().toString(), message);
 
 			// Record metrics
